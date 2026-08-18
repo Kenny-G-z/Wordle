@@ -235,10 +235,10 @@
 
                 statusMsg.textContent = "";
                 await new Promise(r => setTimeout(r, 1000));
-                
+
                 let userWon = false;
 
-                if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "The Computer Solved It!";} 
+                if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "Computer Solved It!";} 
                 else if (currentRound >= 5) {
                     userWon = true;
                     globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;

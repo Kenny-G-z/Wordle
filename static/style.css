@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 * {box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family);}
-
 :root {
     --bg-primary: #08090d;
     --card-bg: #10121a;
@@ -56,7 +55,7 @@ header {
     text-align: center;
     width: 100%;
     max-width: 900px;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     animation: fadeIn 0.4s ease forwards;
 }
 
@@ -284,7 +283,6 @@ header h2 {
     outline: none;
 }
 
-
 #start-btn {
     padding: 14px 30px;
     font-size: 1.25rem;
@@ -362,7 +360,7 @@ footer {
     margin-top: 25px;
     font-size: 22px;
     color: var(--footer-text-color);
-    text-shadow:0 0 5px rgba(168, 85, 247, 0.5), 0 0 12px rgba(122, 0, 255, 0.5);
+    text-shadow: 0 0 5px rgba(168, 85, 247, 0.5), 0 0 12px rgba(122, 0, 255, 0.5);
     text-align: center;
 }
 
@@ -576,15 +574,27 @@ footer a:hover {color: white;}
 .key-btn:active {background-color: #565758;}
 .special-key {background-color: #2c2d2e;font-size: 0.75rem;}
 
+#status-msg.loading-prompt {
+    font-family: var(--font-family);
+    font-size: 1.7rem;
+    color: var(--footer-text-color);
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.6), 0 0 25px rgba(122, 0, 255, 0.5);
+}
+
 @media (max-width: 650px) {
-    body {padding: 16px 8px;}
-    header h1 {font-size: 2rem;}
-    header h2 {font-size: 1.1rem;}
-    #game-container {gap: 15px; flex-direction: column; align-items: center;}
-    .board-wrapper {padding: 12px; border-radius: 14px; width: 100%; max-width: 320px;}
-    .board-wrapper h2 {font-size: 1.25rem; margin-bottom: 10px;}
-    .tile {width: 44px; height: 44px; font-size: 1.5rem; border-width: 4px;}
-    #player-grid, #ai-grid, #challenge-grid, .row {grid-gap: 5px;}
+    body {padding: 4px 4px; height: 100vh; max-height: 100vh; overflow: hidden;}
+    header {margin-bottom: 5px;}
+    header h1 {font-size: 1.4rem;}
+    header h2 {font-size: 0.85rem; margin-top: 2px;}
+    #mobile-layout-wrapper {height: calc(100vh - 60px); justify-content: space-evenly; width: 100%;}
+    .board-wrapper {padding: 6px 10px; border-radius: 10px; width: 100%; max-width: 280px;}
+    .board-wrapper h2 {font-size: 0.85rem; margin-bottom: 4px;}
+    .tile {width: 32px; height: 32px; font-size: 1.1rem; border-width: 2px; border-radius: 4px;}
+    #player-grid, #ai-grid, #challenge-grid, .row {grid-gap: 3px;}
+    #keyboard-container {gap: 3px !important; margin: 2px 0 !important; max-width: 340px !important;}
+    .key-btn {padding: 6px 2px !important; font-size: 0.7rem !important; height: 32px !important; max-width: 28px !important;}
+    .special-key {max-width: 44px !important; font-size: 0.55rem !important;}
     .challenge-container {max-width: 100%;}
-    .challenge-container #status-msg {font-size: 2rem;}
+    .challenge-container #status-msg {font-size: 1.2rem; margin: 5px 0;}
+    #status-msg {font-size: 1.2rem; margin: 5px 0;}
 }
