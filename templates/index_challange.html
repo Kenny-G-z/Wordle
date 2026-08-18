@@ -9,7 +9,9 @@
 </head>
 
 <body>
-    <input type="text" id="mobile-focus-input" autocomplete="off" autocorrect="off" autocapitalize="off" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
+    <div class="mobile-input-container" style="text-align: center; margin: 10px 0;">
+        <input type="text" id="mobile-focus-input" placeholder="Tap here to type..." autocomplete="off" autocorrect="off" autocapitalize="off" style="padding: 10px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--tile-bg); color: var(--text-color); width: 80%; max-width: 300px; text-align: center;">
+    </div>
 
     <header>
         <h1>Challenge The Computer</h1>
@@ -165,10 +167,8 @@
 
                 if (data.solved) {
                     gameOver = true;
-                    
                     globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
                     saveGlobalStats();
-
                     statusMsg.textContent = "";
                     await new Promise(r => setTimeout(r, 1000));
                     statusMsg.textContent = "The Computer Solved It!";
@@ -195,7 +195,7 @@
 
                 statusMsg.textContent = "";
                 await new Promise(r => setTimeout(r, 1000));
-                
+
                 let userWon = false;
 
                 if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "The Computer Solved It!";} 

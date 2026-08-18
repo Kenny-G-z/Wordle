@@ -9,16 +9,16 @@
 </head>
 
 <body>
-    <input type="text" id="mobile-focus-input" autocomplete="off" autocorrect="off" autocapitalize="off" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
+    <div class="mobile-input-container" style="text-align: center; margin: 10px 0;">
+        <input type="text" id="mobile-focus-input" placeholder="Tap here to type..." autocomplete="off" autocorrect="off" autocapitalize="off" style="padding: 10px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--tile-bg); color: var(--text-color); width: 80%; max-width: 300px; text-align: center;">
+    </div>
 
     <header>
         <h1>Welcome to Wordle</h1>
     </header>
 
     {% if load_failed %}
-
         <div id="error-banner">The Wordle failed to load.</div>
-
     {% endif %}
 
     <main id="game-container">
