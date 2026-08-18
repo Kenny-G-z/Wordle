@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -10,6 +9,8 @@
 </head>
 
 <body>
+    <input type="text" id="mobile-focus-input" autocomplete="off" autocorrect="off" autocapitalize="off" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
+
     <header>
         <h1>Challenge The Computer</h1>
     </header>
@@ -72,14 +73,10 @@
         let secret = "";
         let gameOver = false;
         let globalStats = {challengePlayed: 0, challengeWon: 0};
-
-        function loadGlobalStats() {
-            const saved = localStorage.getItem("wordle_global_stats");
-            if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed }}
-        }
-        
+        function loadGlobalStats() {const saved = localStorage.getItem("wordle_global_stats"); if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed }}}
         function saveGlobalStats() {localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));}
         loadGlobalStats();
+
         function renderChallengeStatsModal(didUserWin) {
             const modal = document.getElementById("challenge-stats-modal");
             const titleEl = document.getElementById("challenge-modal-title");
@@ -97,7 +94,6 @@
             modal.style.display = "flex";
             setTimeout(() => {titleEl.classList.add("visible");}, 1000);
         }
-        
         document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {document.getElementById("challenge-stats-modal").style.display = "none";});
 
         for (let r = 0; r < ROWS; r++) {
@@ -124,6 +120,19 @@
         }
 
         startBtn.addEventListener("click", startGame);
+        
+        const mobileInput = document.getElementById("mobile-focus-input");
+        if (mobileInput) {window.addEventListener("click", () => {if (!secretInput.disabled) {mobileInput.focus();}});
+            mobileInput.addEventListener("input", (e) => {
+                const val = e.target.value;
+                if (val.length > 0) {
+                    const char = val[val.length - 1].toLowerCase();
+                    if (/^[a-zA-Z]$/.test(char)) {if (!secretInput.disabled && secretInput.value.length < COLS) {secretInput.value += char.toUpperCase();}}
+                    e.target.value = "";
+                }
+            });
+            mobileInput.addEventListener("keydown", (e) => {if (e.key === "Backspace") {if (!secretInput.disabled && secretInput.value.length > 0) {secretInput.value = secretInput.value.slice(0, -1);}} else if (e.key === "Enter") {startGame();}});
+        }
         secretInput.addEventListener("keydown", (e) => {if (e.key === "Enter") {startGame();}});
         
         async function startGame() {
@@ -186,6 +195,7 @@
 
                 statusMsg.textContent = "";
                 await new Promise(r => setTimeout(r, 1000));
+                
                 let userWon = false;
 
                 if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "The Computer Solved It!";} 

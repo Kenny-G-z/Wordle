@@ -9,6 +9,7 @@
 </head>
 
 <body>
+    <input type="text" id="mobile-focus-input" autocomplete="off" autocorrect="off" autocapitalize="off" style="position: absolute; opacity: 0; pointer-events: none; height: 0; width: 0;">
 
     <header>
         <h1>Welcome to Wordle</h1>
@@ -111,14 +112,9 @@
             raceLost: 0
         };
 
-        function loadGlobalStats() {
-            const saved = localStorage.getItem("wordle_global_stats");
-            if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed };}
-        }
+        function loadGlobalStats() {const saved = localStorage.getItem("wordle_global_stats"); if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed };}}
         loadGlobalStats();
-
         function saveGlobalStats() {localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));}
-
         function renderStatsModal(didWin, numGuesses, revealedWord = null) {
             const modal = document.getElementById("stats-modal");
             const aiRevealContainer = document.getElementById("modal-ai-word-reveal-container");
@@ -126,7 +122,6 @@
             
             if (revealedWord) {aiRevealContainer.style.display = "block"; aiWordEl.textContent = revealedWord;} 
             else {aiRevealContainer.style.display = "none";}
-
             document.getElementById("stat-played").textContent = globalStats.played;
             const winPct = globalStats.played > 0 ? Math.round((globalStats.won / globalStats.played) * 100) : 0;
             document.getElementById("stat-win-pct").textContent = winPct;
@@ -162,16 +157,12 @@
             modal.style.display = "flex";
         }
 
-        document.getElementById("close-stats-btn").addEventListener("click", () => {
-            document.getElementById("stats-modal").style.display = "none";
-        });
-
+        document.getElementById("close-stats-btn").addEventListener("click", () => {document.getElementById("stats-modal").style.display = "none";});
         const endgameSection = document.getElementById("endgame-section");
         const revealBtn = document.getElementById("reveal-btn");
         const challengeContainer = document.getElementById("challenge-link-container");
         const aiGrid = document.getElementById("ai-grid");
         const statusMsg = document.getElementById("status-msg");
-
         function createGrid(containerId) {
             const container = document.getElementById(containerId);
 
@@ -186,7 +177,6 @@
                     tile.id = `${containerId}-tile-${r}-${c}`;
                     row.appendChild(tile);
                 }
-
                 container.appendChild(row);
             }
         }
@@ -200,11 +190,9 @@
             const today = new Date().toISOString().split("T")[0];
 
             if (!saved) return;
-
             try {
                 const parsed = JSON.parse(saved);
                 if (parsed.date !== today) {localStorage.removeItem("wordle_race_daily_state"); return;}
-
                 gameState = parsed;
                 currentRow = gameState.userGuesses.length;
                 aiCurrentRow = gameState.aiGuesses.length;
@@ -261,17 +249,30 @@
             aiGrid.classList.remove("masked-letters");
             gameState.aiRevealed = true;
             saveState();
+            setTimeout(() => {challengeContainer.style.display = "block";endgameSection.style.setProperty("display", "flex", "important");}, 1000);
+        }
+        revealBtn.addEventListener("click", triggerAiReveal);
 
-            setTimeout(() => {
-                challengeContainer.style.display = "block";
-                endgameSection.style.setProperty("display", "flex", "important");
-            }, 1000);
+        const mobileInput = document.getElementById("mobile-focus-input");
+        if (mobileInput) {window.addEventListener("click", () => {mobileInput.focus();});
+            mobileInput.addEventListener("input", (e) => {
+                const val = e.target.value;
+                if (val.length > 0) {
+                    const char = val[val.length - 1].toLowerCase();
+                    if (/^[a-zA-Z]$/.test(char)) {if (!isUserGameOver && currentGuess.length < COLS) {currentGuess += char;updateCurrentRow();}}
+                    e.target.value = "";
+                }
+            });
+
+            mobileInput.addEventListener("keydown", (e) => {
+                if (isUserGameOver) return;
+                if (e.key === "Backspace") {if (currentGuess.length > 0) {currentGuess = currentGuess.slice(0, -1);updateCurrentRow();}} 
+                else if (e.key === "Enter") {submitGuess();}
+            });
         }
 
-        revealBtn.addEventListener("click", triggerAiReveal);
         window.addEventListener("keydown", (e) => {
             if (isUserGameOver) return;
-
             if (statusMsg.textContent.includes("Play Out Your game") && (e.key === "Backspace" || /^[a-zA-Z]$/.test(e.key))) {
                 statusMsg.textContent = "";
                 statusMsg.classList.remove("small-warning");
@@ -280,29 +281,15 @@
             }
 
             if (e.key === "Enter") {submitGuess();} 
-            else if (e.key === "Backspace") {
-                if (currentGuess.length > 0) {
-                    currentGuess = currentGuess.slice(0, -1);
-                    updateCurrentRow();
-                }
-            } else if (/^[a-zA-Z]$/.test(e.key)) {
-                if (currentGuess.length < COLS) {
-                    currentGuess += e.key.toLowerCase();
-                    updateCurrentRow();
-                }
-            }
+            else if (e.key === "Backspace") {if (currentGuess.length > 0) {currentGuess = currentGuess.slice(0, -1); updateCurrentRow();}} 
+            else if (/^[a-zA-Z]$/.test(e.key)) {if (currentGuess.length < COLS) {currentGuess += e.key.toLowerCase(); updateCurrentRow();}}
         });
 
         function updateCurrentRow() {
             for (let c = 0; c < COLS; c++) {
                 const tile = document.getElementById(`player-grid-tile-${currentRow}-${c}`);
-                if (c < currentGuess.length) {
-                    tile.textContent = currentGuess[c].toUpperCase();
-                    tile.dataset.state = "active";
-                } else {
-                    tile.textContent = "";
-                    tile.removeAttribute("data-state");
-                }
+                if (c < currentGuess.length) {tile.textContent = currentGuess[c].toUpperCase(); tile.dataset.state = "active";} 
+                else {tile.textContent = ""; tile.removeAttribute("data-state");}
             }
         }
 
@@ -376,11 +363,9 @@
                 let aiPromise = Promise.resolve();
 
                 if (data.ai) {
-                    // Always use aiCurrentRow, which starts at 0 for the first turn ("raise")
                     const aiRowIdx = aiCurrentRow; 
                     const aiWord = data.ai.guess;
                     const aiFeedback = data.ai.feedback;
-                    
                     gameState.aiGuesses.push({ guess: aiWord, feedback: aiFeedback });
                     aiCurrentRow++;
 
@@ -419,16 +404,13 @@
                 })();
 
                 await Promise.all([aiPromise, playerPromise]);
-
                 gameState.userGuesses.push({guess: data.user.guess, feedback: data.user.feedback});
                 
                 if (data.target) {gameState.targetWord = data.target;}
-
                 if (data.user.won) {
                     isUserGameOver = true;
                     gameState.gameOver = true;
                     gameState.userWon = true;
-
                     const aiWonOnSameTurn = aiWonThisTurn && (currentRow === aiCurrentRow - 1);
 
                     if (!gameState.statsSaved) {
@@ -447,7 +429,6 @@
                     }
 
                     await new Promise(res => setTimeout(res, 1000));
-
                     if (aiWonOnSameTurn) {statusMsg.textContent = "You Won!"; gameState.statusText = "You Won!";} 
                     else if (aiWonFirst) {statusMsg.textContent = "You Lost!"; gameState.statusText = "You Lost!";} 
                     else {statusMsg.textContent = "Congrats, You Won!"; gameState.statusText = "Congrats, You Won!";}
@@ -465,7 +446,6 @@
                 }
 
                 if (aiWonThisTurn) {aiWonFirst = true; gameState.aiWonFirst = true;}
-
                 if (currentRow === ROWS - 1) {
                     isUserGameOver = true;
                     gameState.gameOver = true;
@@ -503,7 +483,6 @@
                 currentRow++;
                 currentGuess = "";
                 saveState();
-
             } catch (err) {statusMsg.textContent = "Failed to Communicate With Server."; statusMsg.classList.remove("small-warning");}
         }
 
