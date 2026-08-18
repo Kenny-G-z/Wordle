@@ -582,7 +582,7 @@ footer a:hover {color: white;}
 }
 
 @media (max-width: 650px) {
-    body {padding: 4px 4px; height: 100vh; max-height: 100vh; overflow: hidden;}
+    @media (max-width: 650px) {body {padding: 4px 4px; min-height: 100vh; height: auto; overflow-y: auto;}}
     header {margin-bottom: 5px;}
     header h1 {font-size: 1.4rem;}
     header h2 {font-size: 0.85rem; margin-top: 2px;}
