@@ -38,7 +38,6 @@ def turn():
 
     if len(user_guess) != 5:
         return jsonify({"error": "Word must be 5 letters."}), 400
-
     if user_guess not in main.words_valid:
         return jsonify({"error": "Not in word list!"}), 400
 
@@ -47,8 +46,12 @@ def turn():
     user_won = (user_guess == secret)
     ai_response = None
 
-    if not user_won and not session.get("ai_won", False) and bot:
-        ai_guess = bot.current
+    if not session.get("ai_won", False) and bot:
+        if session.get("round", 0) == 0:
+            ai_guess = main.wordle_opener
+        else:
+            ai_guess = bot.current
+
         ai_feedback = main.get_feedback_pattern(ai_guess, secret)
         ai_won = (ai_guess == secret)
 
