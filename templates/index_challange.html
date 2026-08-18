@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=48">
+</head>
+
+<body>
+    <header>
+        <h1>Challenge The Computer</h1>
+    </header>
+
+    <div class="challenge-container">
+        <section class="challenge-input-box">
+            <label for="secret-input">Enter a 5-Letter Word:</label>
+
+            <div class="input-row">
+                <input
+                    type="text"
+                    id="secret-input"
+                    maxlength="5"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button id="start-btn" type="button">Start Guessing</button>
+            </div>
+        </section>
+
+        <main id="game-container">
+            <section class="board-wrapper">
+                <h2>Progress</h2>
+                <div id="challenge-grid"></div>
+            </section>
+        </main>
+
+        <div id="status-msg"></div>
+
+        <div id="endgame-section" style="display: none;">
+            <button id="reveal-btn" type="button" class="nav-btn">Another Round</button>
+            <a href="/" class="nav-btn">Back to Wordle</a>
+        </div>
+    </div>
+
+    <div id="challenge-stats-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button id="close-challenge-stats-btn" class="close-btn">✖</button>
+            
+            <h3 style="margin-bottom: 20px; margin-top: 15px;">CHALLENGE STATS</h3>
+            <div class="stats-row" style="margin-bottom: 10px;">
+                <div class="stat-box"><div class="stat-num" id="stat-chal-played">0</div><div class="stat-label">Prompted</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-chal-won" style="color: var(--color-correct);">0</div><div class="stat-label">Stumped</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-chal-win-pct">0</div><div class="stat-label">Success %</div></div>
+            </div>
+
+            <h2 id="challenge-modal-title" class="highlight-word delayed-verdict" style="font-size: 1.8rem; margin-top: 15px; margin-bottom: 10px; text-transform: none;"></h2>
+        </div>
+    </div>
+
+    <script>
+        const ROWS = 6;
+        const COLS = 5;
+        const grid = document.getElementById("challenge-grid");
+        const statusMsg = document.getElementById("status-msg");
+        const secretInput = document.getElementById("secret-input");
+        const startBtn = document.getElementById("start-btn");
+        const anotherBtn = document.getElementById("reveal-btn");
+        const finishedSection = document.getElementById("endgame-section");
+        let secret = "";
+        let gameOver = false;
+        let globalStats = {challengePlayed: 0, challengeWon: 0};
+
+        function loadGlobalStats() {
+            const saved = localStorage.getItem("wordle_global_stats");
+            if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed }}
+        }
+        
+        function saveGlobalStats() {localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));}
+        loadGlobalStats();
+        function renderChallengeStatsModal(didUserWin) {
+            const modal = document.getElementById("challenge-stats-modal");
+            const titleEl = document.getElementById("challenge-modal-title");
+            titleEl.classList.remove("visible");
+            titleEl.style.color = "var(--footer-text-color)";
+            titleEl.style.textShadow = "0 0 15px rgba(168, 85, 247, 0.4)";
+            if (didUserWin) {titleEl.textContent = "You Finally Got One";} 
+            else {titleEl.textContent = "Satisfied?";}
+            document.getElementById("stat-chal-played").textContent = globalStats.challengePlayed || 0;
+            document.getElementById("stat-chal-won").textContent = globalStats.challengeWon || 0;
+            const played = globalStats.challengePlayed || 0;
+            const won = globalStats.challengeWon || 0;
+            const pct = played > 0 ? Math.round((won / played) * 100) : 0;
+            document.getElementById("stat-chal-win-pct").textContent = pct;
+            modal.style.display = "flex";
+            setTimeout(() => {titleEl.classList.add("visible");}, 1000);
+        }
+        
+        document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {document.getElementById("challenge-stats-modal").style.display = "none";});
+
+        for (let r = 0; r < ROWS; r++) {
+            const row = document.createElement("div");
+            row.className = "row";
+            row.id = `challenge-row-${r}`;
+
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.createElement("div");
+                tile.className = "tile";
+                tile.id = `challenge-tile-${r}-${c}`;
+                row.appendChild(tile);
+            }
+            grid.appendChild(row);
+        }
+
+        function resetGrid() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = document.getElementById(`challenge-tile-${r}-${c}`);
+                    if (tile) {tile.textContent = ""; tile.removeAttribute("data-state"); tile.className = "tile";}
+                }
+            }
+        }
+
+        startBtn.addEventListener("click", startGame);
+        secretInput.addEventListener("keydown", (e) => {if (e.key === "Enter") {startGame();}});
+        
+        async function startGame() {
+            secret = secretInput.value.trim().toLowerCase();
+            if (secret.length !== 5) {statusMsg.textContent = "The Word Must be 5 Letters.";return;}
+            resetGrid();
+            statusMsg.textContent = "Computer is Loading Turn 1...";
+            gameOver = false;
+            secretInput.disabled = true;
+            startBtn.style.display = "none";
+            finishedSection.style.display = "none";
+            try {
+                let res = await fetch("/start_challenge", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ secret: secret })
+                })
+
+                let data = await res.json();
+                if (!res.ok) {
+                    statusMsg.textContent = data.error || "Failed to initialize The Computer.";
+                    secretInput.disabled = false;
+                    startBtn.style.display = "inline-block";
+                    return;
+                }
+
+                let challengeId = data.challenge_id;
+                let currentRound = 0;
+                await renderRow(currentRound, data.guess, data.feedback);
+
+                if (data.solved) {
+                    gameOver = true;
+                    
+                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
+                    saveGlobalStats();
+
+                    statusMsg.textContent = "";
+                    await new Promise(r => setTimeout(r, 1000));
+                    statusMsg.textContent = "The Computer Solved It!";
+                    
+                    setTimeout(() => {showFinished(); renderChallengeStatsModal(false);}, 1000);
+                    return;
+                }
+
+                while (currentRound < 5 && !gameOver) {
+                    currentRound++;
+                    statusMsg.textContent = `Computer is Calculating Turn ${currentRound + 1}...`;
+
+                    res = await fetch("/step_challenge", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ challenge_id: challengeId, secret: secret })
+                    });
+
+                    data = await res.json();
+                    if (data.ended || !res.ok) break;
+                    await renderRow(currentRound, data.guess, data.feedback);
+                    if (data.solved) {gameOver = true; break;}
+                }
+
+                statusMsg.textContent = "";
+                await new Promise(r => setTimeout(r, 1000));
+                let userWon = false;
+
+                if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "The Computer Solved It!";} 
+                else if (currentRound >= 5) {
+                    userWon = true;
+                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
+                    globalStats.challengeWon = (globalStats.challengeWon || 0) + 1;
+                    statusMsg.textContent = "Congrats, You Stumped the Computer!"; 
+                }
+
+                saveGlobalStats();
+                setTimeout(() => {showFinished(); renderChallengeStatsModal(userWon);}, 1000);
+            
+            } catch (err) {
+                console.error(err);
+                statusMsg.textContent = "Failed to Communicate With Server.";
+                secretInput.disabled = false;
+                startBtn.style.display = "inline-block";
+            }
+        }
+
+        async function renderRow(rowIdx, guessWord, feedbackArray) {
+            const word = guessWord.toUpperCase();
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`challenge-tile-${rowIdx}-${c}`);
+                if (!tile) continue;
+
+                tile.textContent = word[c];
+                tile.classList.add("dramatic-flip");
+
+                if (feedbackArray[c] === 2) {tile.dataset.state = "correct";} 
+                else if (feedbackArray[c] === 1) {tile.dataset.state = "present";} 
+                else {tile.dataset.state = "absent";}
+                await new Promise(resolve => setTimeout(resolve, 180));
+            }
+            await new Promise(resolve => setTimeout(resolve, 400));
+        }
+
+        function showFinished() {finishedSection.style.setProperty("display", "flex", "important");}
+
+        anotherBtn.addEventListener("click", () => {
+            secretInput.value = "";
+            secretInput.disabled = false;
+            startBtn.style.display = "inline-block";
+            statusMsg.textContent = "";
+            finishedSection.style.display = "none";
+            gameOver = false;
+            resetGrid();
+            secretInput.focus();
+        });
+    </script>
+
+    <hr class="footer-line">
+
+    <footer>
+        <p>Created by Kenny</p>
+        <a href="https://github.com/Kenny-G-z" target="_blank">View my GitHub</a>
+    </footer>
+
+</body>
+
+</html>

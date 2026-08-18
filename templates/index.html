@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=54">
+</head>
+
+<body>
+
+    <header>
+        <h1>Welcome to Wordle</h1>
+    </header>
+
+    {% if load_failed %}
+
+        <div id="error-banner">The Wordle failed to load.</div>
+
+    {% endif %}
+
+    <main id="game-container">
+        <section class="board-wrapper">
+            <h2>Player</h2>
+            <div id="player-grid"></div>
+        </section>
+
+        <section class="board-wrapper">
+            <h2>Computer</h2>
+            <div id="ai-grid" class="masked-letters"></div>
+        </section>
+    </main>
+
+    <div id="status-msg"></div>
+
+    <div id="endgame-section" style="display: none;">
+        <button id="reveal-btn" type="button" class="nav-btn">Reveal Letters</button>
+        <div id="challenge-link-container" style="display: none;">
+            <a href="/challenge" class="nav-btn">Challenge the Computer?</a>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="modal-overlay" style="display: none;">
+        <button id="close-stats-btn" class="global-close-btn">✖</button>
+        
+        <div class="modals-wrapper">
+            
+            <div class="modal-content">
+                <h3>CLASSIC STATS</h3>
+                <div class="stats-row">
+                    <div class="stat-box"><div class="stat-num" id="stat-played">0</div><div class="stat-label">Played</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-win-pct">0</div><div class="stat-label">Win %</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-max-streak">0</div><div class="stat-label">Max</div></div>
+                </div>
+
+                <h3>GUESS DISTRIBUTION</h3>
+                <div id="guess-distribution"></div>
+            </div>
+
+            <div class="modal-content">
+                <h3 style="margin-bottom: 20px;">PLAYER VS COMPUTER STATS</h3>
+                <div class="stats-row" style="margin-bottom: 20px;">
+                    <div class="stat-box"><div class="stat-num" id="stat-race-played">0</div><div class="stat-label">Played</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-race-win-pct">0</div><div class="stat-label">Win %</div></div>
+                </div>
+                <div class="stats-row" style="margin-bottom: 24px;">
+                    <div class="stat-box"><div class="stat-num" style="color: var(--color-correct);" id="stat-race-won">0</div><div class="stat-label">Wins</div></div>
+                    <div class="stat-box"><div class="stat-num" style="color: var(--color-absent);" id="stat-race-lost">0</div><div class="stat-label">Losses</div></div>
+                </div>
+                <div id="modal-ai-word-reveal-container" style="display: none; margin-top: 5px; padding-top: 15px; border-top: 1px solid var(--card-border);">
+                    <h3 style="color: var(--footer-text-color); margin-bottom: 4px; font-size: 1.05rem;">THE WORD WAS</h3>
+                    <h2 id="modal-ai-word-reveal" style="font-size: 1.6rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.4); margin-bottom: 0; text-transform: uppercase; letter-spacing: 3px;"></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ROWS = 6;
+        const COLS = 5;
+        let currentRow = 0;
+        let aiCurrentRow = 0;
+        let currentGuess = "";
+        let isUserGameOver = document.getElementById("error-banner") !== null;
+        let isRevealing = false;
+        let aiWonFirst = false;
+        let gameState = {
+            date: new Date().toISOString().split("T")[0],
+            userGuesses: [],
+            aiGuesses: [],
+            userWon: false,
+            aiWonFirst: false,
+            gameOver: false,
+            statusText: "",
+            aiRevealed: false,
+            statsSaved: false,   
+            targetWord: "",      
+            playOutMsgShown: false 
+        };
+
+        let globalStats = {
+            played: 0,
+            won: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+            racePlayed: 0,
+            raceWon: 0,
+            raceLost: 0
+        };
+
+        function loadGlobalStats() {
+            const saved = localStorage.getItem("wordle_global_stats");
+            if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed };}
+        }
+        loadGlobalStats();
+
+        function saveGlobalStats() {localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));}
+
+        function renderStatsModal(didWin, numGuesses, revealedWord = null) {
+            const modal = document.getElementById("stats-modal");
+            const aiRevealContainer = document.getElementById("modal-ai-word-reveal-container");
+            const aiWordEl = document.getElementById("modal-ai-word-reveal");
+            
+            if (revealedWord) {aiRevealContainer.style.display = "block"; aiWordEl.textContent = revealedWord;} 
+            else {aiRevealContainer.style.display = "none";}
+
+            document.getElementById("stat-played").textContent = globalStats.played;
+            const winPct = globalStats.played > 0 ? Math.round((globalStats.won / globalStats.played) * 100) : 0;
+            document.getElementById("stat-win-pct").textContent = winPct;
+            document.getElementById("stat-streak").textContent = globalStats.currentStreak;
+            document.getElementById("stat-max-streak").textContent = globalStats.maxStreak;
+            const distContainer = document.getElementById("guess-distribution");
+            distContainer.innerHTML = "";
+            let maxGuesses = 0;
+
+            for (let i = 1; i <= 6; i++) {if (globalStats.distribution[i] > maxGuesses) maxGuesses = globalStats.distribution[i];}
+            for (let i = 1; i <= 6; i++) {
+                const count = globalStats.distribution[i];
+                const percentage = maxGuesses > 0 ? Math.max((count / maxGuesses) * 100, 7) : 7;
+                const isCurrentGame = (didWin && numGuesses === i);
+                const barClass = isCurrentGame ? "dist-bar highlight" : "dist-bar";
+                distContainer.innerHTML += `
+                    <div class="dist-row">
+                        <div>${i}</div>
+                        <div class="dist-bar-container">
+                            <div class="${barClass}" style="width: ${percentage}%">${count}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById("stat-race-played").textContent = globalStats.racePlayed || 0;
+            document.getElementById("stat-race-won").textContent = globalStats.raceWon || 0;
+            document.getElementById("stat-race-lost").textContent = globalStats.raceLost || 0;
+            const totalRaces = globalStats.racePlayed || 0;
+            const totalRaceWins = globalStats.raceWon || 0;
+            const raceWinPct = totalRaces > 0 ? Math.round((totalRaceWins / totalRaces) * 100) : 0;
+            document.getElementById("stat-race-win-pct").textContent = raceWinPct;
+            modal.style.display = "flex";
+        }
+
+        document.getElementById("close-stats-btn").addEventListener("click", () => {
+            document.getElementById("stats-modal").style.display = "none";
+        });
+
+        const endgameSection = document.getElementById("endgame-section");
+        const revealBtn = document.getElementById("reveal-btn");
+        const challengeContainer = document.getElementById("challenge-link-container");
+        const aiGrid = document.getElementById("ai-grid");
+        const statusMsg = document.getElementById("status-msg");
+
+        function createGrid(containerId) {
+            const container = document.getElementById(containerId);
+
+            for (let r = 0; r < ROWS; r++) {
+                const row = document.createElement("div");
+                row.className = "row";
+                row.id = `${containerId}-row-${r}`;
+
+                for (let c = 0; c < COLS; c++) {
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.id = `${containerId}-tile-${r}-${c}`;
+                    row.appendChild(tile);
+                }
+
+                container.appendChild(row);
+            }
+        }
+
+        createGrid("player-grid");
+        createGrid("ai-grid");
+
+        function saveState() {localStorage.setItem("wordle_race_daily_state", JSON.stringify(gameState));}
+        function restoreState() {
+            const saved = localStorage.getItem("wordle_race_daily_state");
+            const today = new Date().toISOString().split("T")[0];
+
+            if (!saved) return;
+
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed.date !== today) {localStorage.removeItem("wordle_race_daily_state"); return;}
+
+                gameState = parsed;
+                currentRow = gameState.userGuesses.length;
+                aiCurrentRow = gameState.aiGuesses.length;
+                aiWonFirst = gameState.aiWonFirst;
+                isUserGameOver = gameState.gameOver;
+                statusMsg.textContent = gameState.statusText;
+                
+                if (gameState.statusText.includes("Play Out Your game")) {statusMsg.classList.add("small-warning");}
+                gameState.userGuesses.forEach((item, r) => {paintPlayerFeedbackInstant(r, item.guess, item.feedback);});
+                gameState.aiGuesses.forEach((item, r) => {paintAiFeedback(r, item.guess, item.feedback);});
+
+                if (gameState.gameOver) {endgameSection.style.setProperty("display", "flex", "important");
+                    if (gameState.aiRevealed) {
+                        aiGrid.classList.remove("masked-letters");
+                        for (let r = 0; r < aiCurrentRow; r++) {
+                            for (let c = 0; c < COLS; c++) {
+                                const tile = document.getElementById(`ai-grid-tile-${r}-${c}`);
+                                if (tile) {tile.textContent = tile.dataset.letter || ""; tile.classList.add("revealed");}
+                            }
+                        }
+                        revealBtn.style.display = "none";
+                        challengeContainer.style.display = "block";
+                    } else {revealBtn.style.display = "inline-flex";}
+                    
+                    setTimeout(() => {renderStatsModal(gameState.userWon, gameState.userGuesses.length, gameState.targetWord);}, 500);
+                }
+            } catch (e) {localStorage.removeItem("wordle_race_daily_state");}
+        }
+
+        async function triggerAiReveal() {
+            if (isRevealing) return;
+            isRevealing = true;
+            revealBtn.style.display = "none";
+            const playedTiles = [];
+
+            for (let r = 0; r < aiCurrentRow; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = document.getElementById(`ai-grid-tile-${r}-${c}`);
+                    if (tile) playedTiles.push(tile);
+                }
+            }
+
+            for (let i = 0; i < playedTiles.length; i++) {
+                const tile = playedTiles[i];
+                tile.classList.remove("dramatic-flip");
+                void tile.offsetWidth;
+                tile.classList.add("dramatic-flip");
+                await new Promise(res => setTimeout(res, 100));
+                tile.textContent = tile.dataset.letter || "";
+                tile.classList.add("revealed");
+                await new Promise(res => setTimeout(res, 60));
+            }
+
+            aiGrid.classList.remove("masked-letters");
+            gameState.aiRevealed = true;
+            saveState();
+
+            setTimeout(() => {
+                challengeContainer.style.display = "block";
+                endgameSection.style.setProperty("display", "flex", "important");
+            }, 1000);
+        }
+
+        revealBtn.addEventListener("click", triggerAiReveal);
+        window.addEventListener("keydown", (e) => {
+            if (isUserGameOver) return;
+
+            if (statusMsg.textContent.includes("Play Out Your game") && (e.key === "Backspace" || /^[a-zA-Z]$/.test(e.key))) {
+                statusMsg.textContent = "";
+                statusMsg.classList.remove("small-warning");
+                gameState.statusText = "";
+                saveState();
+            }
+
+            if (e.key === "Enter") {submitGuess();} 
+            else if (e.key === "Backspace") {
+                if (currentGuess.length > 0) {
+                    currentGuess = currentGuess.slice(0, -1);
+                    updateCurrentRow();
+                }
+            } else if (/^[a-zA-Z]$/.test(e.key)) {
+                if (currentGuess.length < COLS) {
+                    currentGuess += e.key.toLowerCase();
+                    updateCurrentRow();
+                }
+            }
+        });
+
+        function updateCurrentRow() {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`player-grid-tile-${currentRow}-${c}`);
+                if (c < currentGuess.length) {
+                    tile.textContent = currentGuess[c].toUpperCase();
+                    tile.dataset.state = "active";
+                } else {
+                    tile.textContent = "";
+                    tile.removeAttribute("data-state");
+                }
+            }
+        }
+
+        function shakeRow(rowIdx) {
+            const rowElem = document.getElementById(`player-grid-row-${rowIdx}`);
+            rowElem.classList.remove("shake");
+            void rowElem.offsetWidth;
+            rowElem.classList.add("shake");
+        }
+
+        function paintPlayerFeedbackInstant(rowIdx, word, feedback) {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`player-grid-tile-${rowIdx}-${c}`);
+                tile.textContent = word[c].toUpperCase();
+                if (feedback[c] === 2) tile.dataset.state = "correct";
+                else if (feedback[c] === 1) tile.dataset.state = "present";
+                else tile.dataset.state = "absent";
+            }
+        }
+
+        function paintAiFeedback(rowIdx, word, feedback) {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`ai-grid-tile-${rowIdx}-${c}`);
+                tile.dataset.letter = word[c].toUpperCase();
+                tile.textContent = "";
+                if (feedback[c] === 2) tile.dataset.state = "correct";
+                else if (feedback[c] === 1) tile.dataset.state = "present";
+                else tile.dataset.state = "absent";
+            }
+        }
+
+        async function submitGuess() {
+            if (currentGuess.length !== COLS) {
+                statusMsg.textContent = "The Word Must be 5 Letters.";
+                statusMsg.classList.remove("small-warning");
+                shakeRow(currentRow);
+                return;
+            }
+
+            try {
+                const response = await fetch("/turn", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ guess: currentGuess })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 400) {
+                    statusMsg.textContent = data.error || "Not in The Word List";
+                    statusMsg.classList.remove("small-warning");
+                    shakeRow(currentRow);
+                    return;
+                }
+
+                if (!response.ok) {
+                    isUserGameOver = true;
+                    statusMsg.textContent = data.error || "Turn error";
+                    statusMsg.classList.remove("small-warning");
+                    gameState.gameOver = true;
+                    gameState.targetWord = data.target || "UNKNOWN";
+                    gameState.statusText = statusMsg.textContent;
+                    saveState();
+                    return;
+                }
+
+                statusMsg.textContent = "";
+                statusMsg.classList.remove("small-warning");
+
+                let aiWonThisTurn = false;
+                let aiPromise = Promise.resolve();
+
+                if (data.ai) {
+                    const aiRowIdx = aiCurrentRow;
+                    const aiWord = data.ai.guess;
+                    const aiFeedback = data.ai.feedback;
+                    gameState.aiGuesses.push({ guess: aiWord, feedback: aiFeedback });
+                    aiCurrentRow++;
+
+                    if (data.ai.won) aiWonThisTurn = true;
+
+                    aiPromise = (async () => {
+                        for (let c = 0; c < COLS; c++) {
+                            const tile = document.getElementById(`ai-grid-tile-${aiRowIdx}-${c}`);
+                            tile.dataset.letter = aiWord[c].toUpperCase();
+                            tile.textContent = aiWord[c].toUpperCase();
+                            tile.classList.add("dramatic-flip");
+
+                            if (aiFeedback[c] === 2) tile.dataset.state = "correct";
+                            else if (aiFeedback[c] === 1) tile.dataset.state = "present";
+                            else tile.dataset.state = "absent";
+                            await new Promise(res => setTimeout(res, 200));
+                        }
+                    })();
+                }
+
+                const playerPromise = (async () => {
+                    const playerRowIdx = currentRow;
+                    const userWord = data.user.guess;
+                    const userFeedback = data.user.feedback;
+
+                    for (let c = 0; c < COLS; c++) {
+                        const tile = document.getElementById(`player-grid-tile-${playerRowIdx}-${c}`);
+                        tile.textContent = userWord[c].toUpperCase();
+                        tile.classList.add("dramatic-flip");
+
+                        if (userFeedback[c] === 2) tile.dataset.state = "correct";
+                        else if (userFeedback[c] === 1) tile.dataset.state = "present";
+                        else tile.dataset.state = "absent";
+                        await new Promise(res => setTimeout(res, 200));
+                    }
+                })();
+
+                await Promise.all([aiPromise, playerPromise]);
+
+                gameState.userGuesses.push({guess: data.user.guess, feedback: data.user.feedback});
+                
+                if (data.target) {gameState.targetWord = data.target;}
+
+                if (data.user.won) {
+                    isUserGameOver = true;
+                    gameState.gameOver = true;
+                    gameState.userWon = true;
+
+                    const aiWonOnSameTurn = aiWonThisTurn && (currentRow === aiCurrentRow - 1);
+
+                    if (!gameState.statsSaved) {
+                        globalStats.played++;
+                        globalStats.won++;
+                        globalStats.currentStreak++;
+                        if (globalStats.currentStreak > globalStats.maxStreak) {globalStats.maxStreak = globalStats.currentStreak;}
+                        globalStats.distribution[currentRow + 1]++;
+                    
+                        globalStats.racePlayed = (globalStats.racePlayed || 0) + 1;
+                        
+                        if (aiWonOnSameTurn) {globalStats.raceWon = (globalStats.raceWon || 0) + 1;} 
+                        else if (aiWonFirst) {globalStats.raceLost = (globalStats.raceLost || 0) + 1;} 
+                        else {globalStats.raceWon = (globalStats.raceWon || 0) + 1;}
+
+                        gameState.statsSaved = true;
+                        saveGlobalStats();
+                    }
+
+                    await new Promise(res => setTimeout(res, 1000));
+
+                    if (aiWonOnSameTurn) {statusMsg.textContent = "You Won!"; gameState.statusText = "You Won!";} 
+                    else if (aiWonFirst) {statusMsg.textContent = "You Lost!"; gameState.statusText = "You Lost!";} 
+                    else {statusMsg.textContent = "Congrats, You Won!"; gameState.statusText = "Congrats, You Won!";}
+                    saveState();
+
+                    setTimeout(() => {
+                        endgameSection.style.setProperty("display", "flex", "important");
+                        renderStatsModal(true, currentRow + 1, gameState.targetWord); 
+                        
+                        if (!aiWonFirst) {triggerAiReveal(); } 
+                        else {revealBtn.style.display = "inline-flex";}
+                    }, 1000);
+
+                    return;
+                }
+
+                if (aiWonThisTurn) {aiWonFirst = true; gameState.aiWonFirst = true;}
+
+                if (currentRow === ROWS - 1) {
+                    isUserGameOver = true;
+                    gameState.gameOver = true;
+
+                    if (!gameState.statsSaved) {
+                        globalStats.played++;
+                        globalStats.currentStreak = 0;
+                        globalStats.racePlayed = (globalStats.racePlayed || 0) + 1;
+                        globalStats.raceLost = (globalStats.raceLost || 0) + 1;
+                        gameState.statsSaved = true;
+                        saveGlobalStats();
+                    }
+
+                    await new Promise(res => setTimeout(res, 1000));
+                    statusMsg.textContent = "Better Luck Next Time!";
+                    gameState.statusText = "Better Luck Next Time!";
+                    saveState();
+
+                    setTimeout(() => {
+                        endgameSection.style.setProperty("display", "flex", "important");
+                        revealBtn.style.display = "inline-flex";
+                        renderStatsModal(false, 0, gameState.targetWord); 
+                    }, 1000);
+
+                    return;
+                }
+
+                if (aiWonFirst && !gameState.playOutMsgShown) {
+                    statusMsg.textContent = "You Lost, Finish Your Game!";
+                    statusMsg.classList.add("small-warning");
+                    gameState.statusText = "You Lost, Finish Your Game!";
+                    gameState.playOutMsgShown = true; 
+                }
+
+                currentRow++;
+                currentGuess = "";
+                saveState();
+
+            } catch (err) {statusMsg.textContent = "Failed to Communicate With Server."; statusMsg.classList.remove("small-warning");}
+        }
+
+        restoreState();
+    </script>
+
+    <hr class="footer-line">
+
+    <footer>
+        <p>Created by Kenny</p>
+        <a href="https://github.com/Kenny-G-z" target="_blank">View my GitHub</a>
+    </footer>
+</body>
+</html>
