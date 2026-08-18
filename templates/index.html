@@ -9,9 +9,6 @@
 </head>
 
 <body>
-    <div class="mobile-input-container" style="text-align: center; margin: 10px 0;">
-        <input type="text" id="mobile-focus-input" placeholder="Tap here to type..." autocomplete="off" autocorrect="off" autocapitalize="off" style="padding: 10px; font-size: 1rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--tile-bg); color: var(--text-color); width: 80%; max-width: 300px; text-align: center;">
-    </div>
 
     <header>
         <h1>Welcome to Wordle</h1>
@@ -32,6 +29,43 @@
             <div id="ai-grid" class="masked-letters"></div>
         </section>
     </main>
+
+    <div id="keyboard-container" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 20px auto; max-width: 500px; padding: 0 10px;">
+        <div class="keyboard-row" style="display: flex; gap: 6px;">
+            <button class="key-btn" data-key="q">Q</button>
+            <button class="key-btn" data-key="w">W</button>
+            <button class="key-btn" data-key="e">E</button>
+            <button class="key-btn" data-key="r">R</button>
+            <button class="key-btn" data-key="t">T</button>
+            <button class="key-btn" data-key="y">Y</button>
+            <button class="key-btn" data-key="u">U</button>
+            <button class="key-btn" data-key="i">I</button>
+            <button class="key-btn" data-key="o">O</button>
+            <button class="key-btn" data-key="p">P</button>
+        </div>
+        <div class="keyboard-row" style="display: flex; gap: 6px;">
+            <button class="key-btn" data-key="a">A</button>
+            <button class="key-btn" data-key="s">S</button>
+            <button class="key-btn" data-key="d">D</button>
+            <button class="key-btn" data-key="f">F</button>
+            <button class="key-btn" data-key="g">G</button>
+            <button class="key-btn" data-key="h">H</button>
+            <button class="key-btn" data-key="j">J</button>
+            <button class="key-btn" data-key="k">K</button>
+            <button class="key-btn" data-key="l">L</button>
+        </div>
+        <div class="keyboard-row" style="display: flex; gap: 6px;">
+            <button class="key-btn special-key" data-key="Enter" style="padding: 10px 12px; font-size: 0.8rem;">ENTER</button>
+            <button class="key-btn" data-key="z">Z</button>
+            <button class="key-btn" data-key="x">X</button>
+            <button class="key-btn" data-key="c">C</button>
+            <button class="key-btn" data-key="v">V</button>
+            <button class="key-btn" data-key="b">B</button>
+            <button class="key-btn" data-key="n">N</button>
+            <button class="key-btn" data-key="m">M</button>
+            <button class="key-btn special-key" data-key="Backspace" style="padding: 10px 10px; font-size: 0.8rem;">⌫</button>
+        </div>
+    </div>
 
     <div id="status-msg"></div>
 
@@ -253,23 +287,26 @@
         }
         revealBtn.addEventListener("click", triggerAiReveal);
 
-        const mobileInput = document.getElementById("mobile-focus-input");
-        if (mobileInput) {window.addEventListener("click", () => {mobileInput.focus();});
-            mobileInput.addEventListener("input", (e) => {
-                const val = e.target.value;
-                if (val.length > 0) {
-                    const char = val[val.length - 1].toLowerCase();
-                    if (/^[a-zA-Z]$/.test(char)) {if (!isUserGameOver && currentGuess.length < COLS) {currentGuess += char;updateCurrentRow();}}
-                    e.target.value = "";
+        document.querySelectorAll(".key-btn").forEach(button => {
+            button.addEventListener("click", () => {
+                if (isUserGameOver) return;
+                const keyValue = button.getAttribute("data-key");
+
+                if (keyValue === "Enter") {
+                    submitGuess();
+                } else if (keyValue === "Backspace") {
+                    if (currentGuess.length > 0) {
+                        currentGuess = currentGuess.slice(0, -1);
+                        updateCurrentRow();
+                    }
+                } else if (/^[a-zA-Z]$/.test(keyValue)) {
+                    if (currentGuess.length < COLS) {
+                        currentGuess += keyValue.toLowerCase();
+                        updateCurrentRow();
+                    }
                 }
             });
-
-            mobileInput.addEventListener("keydown", (e) => {
-                if (isUserGameOver) return;
-                if (e.key === "Backspace") {if (currentGuess.length > 0) {currentGuess = currentGuess.slice(0, -1);updateCurrentRow();}} 
-                else if (e.key === "Enter") {submitGuess();}
-            });
-        }
+        });
 
         window.addEventListener("keydown", (e) => {
             if (isUserGameOver) return;
@@ -424,6 +461,7 @@
                         if (aiWonOnSameTurn) {globalStats.raceWon = (globalStats.raceWon || 0) + 1;} 
                         else if (aiWonFirst) {globalStats.raceLost = (globalStats.raceLost || 0) + 1;} 
                         else {globalStats.raceWon = (globalStats.raceWon || 0) + 1;}
+
                         gameState.statsSaved = true;
                         saveGlobalStats();
                     }
@@ -461,6 +499,7 @@
 
                     await new Promise(res => setTimeout(res, 1000));
                     statusMsg.textContent = "Better Luck Next Time!";
+
                     gameState.statusText = "Better Luck Next Time!";
                     saveState();
 
@@ -482,6 +521,7 @@
 
                 currentRow++;
                 currentGuess = "";
+                
                 saveState();
             } catch (err) {statusMsg.textContent = "Failed to Communicate With Server."; statusMsg.classList.remove("small-warning");}
         }

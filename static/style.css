@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+* {box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family);}
 
 :root {
     --bg-primary: #08090d;
@@ -34,8 +35,6 @@
     --blue-active-glow: 0 0 16px rgba(0, 247, 255, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.35);
     --font-family: 'Pacifico', cursive, sans-serif;
 }
-
-* {box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family);}
 
 body {
     background: radial-gradient(
@@ -560,6 +559,22 @@ footer a:hover {color: white;}
     min-width: 24px;
     transition: width 0.5s ease-out;
 }
+
+.key-btn {
+    background-color: var(--tile-bg, #3a3a3c);
+    color: var(--text-color, #ffffff);
+    border: 1px solid var(--card-border, #565758);
+    border-radius: 4px;
+    padding: 12px 10px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.key-btn:active {background-color: #565758;}
+.special-key {background-color: #2c2d2e;font-size: 0.75rem;}
 
 @media (max-width: 650px) {
     body {padding: 16px 8px;}
