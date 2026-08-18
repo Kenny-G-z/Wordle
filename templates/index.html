@@ -376,9 +376,11 @@
                 let aiPromise = Promise.resolve();
 
                 if (data.ai) {
-                    const aiRowIdx = aiCurrentRow;
+                    // Always use aiCurrentRow, which starts at 0 for the first turn ("raise")
+                    const aiRowIdx = aiCurrentRow; 
                     const aiWord = data.ai.guess;
                     const aiFeedback = data.ai.feedback;
+                    
                     gameState.aiGuesses.push({ guess: aiWord, feedback: aiFeedback });
                     aiCurrentRow++;
 
@@ -435,13 +437,11 @@
                         globalStats.currentStreak++;
                         if (globalStats.currentStreak > globalStats.maxStreak) {globalStats.maxStreak = globalStats.currentStreak;}
                         globalStats.distribution[currentRow + 1]++;
-                    
                         globalStats.racePlayed = (globalStats.racePlayed || 0) + 1;
                         
                         if (aiWonOnSameTurn) {globalStats.raceWon = (globalStats.raceWon || 0) + 1;} 
                         else if (aiWonFirst) {globalStats.raceLost = (globalStats.raceLost || 0) + 1;} 
                         else {globalStats.raceWon = (globalStats.raceWon || 0) + 1;}
-
                         gameState.statsSaved = true;
                         saveGlobalStats();
                     }
@@ -517,4 +517,5 @@
         <a href="https://github.com/Kenny-G-z" target="_blank">View my GitHub</a>
     </footer>
 </body>
+
 </html>
