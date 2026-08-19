@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=63">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=67">
 </head>
 
 <body>
@@ -130,26 +130,40 @@
         let aiWonFirst = false;
         let modalClosed = false;
         let isProcessing = false;
-        let showingComputerCard = false;
+        let showingComputerCard = sessionStorage.getItem("wordle_showing_computer") === "true";
 
-        function flipCard() {
+        async function flipCard() {
             if (!gameState.aiRevealed) return;
-            showingComputerCard = !showingComputerCard;
             
+            const cardWrapper = document.getElementById("player-card-wrapper");
+            cardWrapper.classList.add("card-flip-anim");
+            await new Promise(r => setTimeout(r, 200));
+
+            showingComputerCard = !showingComputerCard;
+            sessionStorage.setItem("wordle_showing_computer", showingComputerCard);
+            applyCardView();
+
+            await new Promise(r => setTimeout(r, 200));
+            cardWrapper.classList.remove("card-flip-anim");
+        }
+
+        function applyCardView() {
             const playerGrid = document.getElementById("player-grid");
             const aiGridMobile = document.getElementById("ai-grid-mobile");
             const boardTitle = document.getElementById("board-title");
             const keyboardContainer = document.getElementById("keyboard-container");
 
-            if (showingComputerCard) {
-                playerGrid.style.display = "none";
-                aiGridMobile.style.display = "grid";
-                boardTitle.textContent = "Computer";
+            if (window.innerWidth >= 800) return;
+
+            if (showingComputerCard && gameState.aiRevealed) {
+                if(playerGrid) playerGrid.style.display = "none";
+                if(aiGridMobile) aiGridMobile.style.display = "grid";
+                if(boardTitle) boardTitle.textContent = "Computer";
                 if(keyboardContainer) keyboardContainer.style.display = "none";
             } else {
-                playerGrid.style.display = "grid";
-                aiGridMobile.style.display = "none";
-                boardTitle.textContent = "Player";
+                if(playerGrid) playerGrid.style.display = "grid";
+                if(aiGridMobile) aiGridMobile.style.display = "none";
+                if(boardTitle) boardTitle.textContent = "Player";
                 if(!gameState.gameOver && keyboardContainer) keyboardContainer.style.display = "flex";
             }
         }
@@ -263,25 +277,16 @@
             modal.style.display = "flex";
         }
 
-        // STATS MODAL CLOSE HANDLER (Triggers reveal + forces mobile view to switch to computer board)
+        // STATS MODAL CLOSE HANDLER (Triggers reveal sequence ONLY AFTER clicking X)
         document.getElementById("close-stats-btn").addEventListener("click", async () => {
             document.getElementById("stats-modal").style.display = "none";
             modalClosed = true;
 
             if (window.innerWidth < 800 && !gameState.aiRevealed) {
                 await triggerAiReveal();
-                
-                // Automatically flip view to the computer card on mobile after reveal finishes
                 showingComputerCard = true;
-                const playerGrid = document.getElementById("player-grid");
-                const aiGridMobile = document.getElementById("ai-grid-mobile");
-                const boardTitle = document.getElementById("board-title");
-                const keyboardContainer = document.getElementById("keyboard-container");
-
-                if (playerGrid) playerGrid.style.display = "none";
-                if (aiGridMobile) aiGridMobile.style.display = "grid";
-                if (boardTitle) boardTitle.textContent = "Computer";
-                if (keyboardContainer) keyboardContainer.style.display = "none";
+                sessionStorage.setItem("wordle_showing_computer", "true");
+                applyCardView();
             }
 
             endgameSection.style.setProperty("display", "flex", "important");
@@ -334,6 +339,7 @@
                 const parsed = JSON.parse(saved);
                 if (parsed.date !== today) {
                     localStorage.removeItem("wordle_race_daily_state"); 
+                    sessionStorage.removeItem("wordle_showing_computer");
                     return;
                 }
                 
@@ -357,27 +363,27 @@
                     paintAiFeedbackInstant(r, item.guess, item.feedback, "ai-grid-mobile");
                 });
 
-                if (gameState.gameOver) {
-                    if (gameState.aiRevealed) {
-                        document.getElementById("ai-grid").classList.remove("masked-letters");
-                        document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
-                        
-                        for (let r = 0; r < aiCurrentRow; r++) {
-                            for (let c = 0; c < COLS; c++) {
-                                const desktopTile = document.getElementById(`ai-grid-tile-${r}-${c}`);
-                                const mobileTile = document.getElementById(`ai-grid-mobile-tile-${r}-${c}`);
-                                
-                                if (desktopTile) {
-                                    desktopTile.textContent = desktopTile.dataset.letter || ""; 
-                                    desktopTile.classList.add("revealed");
-                                }
-                                if (mobileTile) {
-                                    mobileTile.textContent = mobileTile.dataset.letter || ""; 
-                                    mobileTile.classList.add("revealed");
-                                }
+                if (gameState.aiRevealed) {
+                    document.getElementById("ai-grid").classList.remove("masked-letters");
+                    document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
+                    document.body.classList.add("ai-revealed-mobile");
+                    
+                    for (let r = 0; r < aiCurrentRow; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            const desktopTile = document.getElementById(`ai-grid-tile-${r}-${c}`);
+                            const mobileTile = document.getElementById(`ai-grid-mobile-tile-${r}-${c}`);
+                            
+                            if (desktopTile) {
+                                desktopTile.textContent = desktopTile.dataset.letter || ""; 
+                                desktopTile.classList.add("revealed");
+                            }
+                            if (mobileTile) {
+                                mobileTile.textContent = mobileTile.dataset.letter || ""; 
+                                mobileTile.classList.add("revealed");
                             }
                         }
                     }
+                    applyCardView();
                 }
             } catch (e) {
                 localStorage.removeItem("wordle_race_daily_state");
@@ -421,7 +427,7 @@
             document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
             
             gameState.aiRevealed = true;
-            document.body.classList.add("ai-revealed-mobile"); // Exposes flip buttons
+            document.body.classList.add("ai-revealed-mobile");
             saveState();
             
             setTimeout(() => {
@@ -537,8 +543,7 @@
         async function submitGuess() {
             if (currentGuess.length !== COLS) {
                 statusMsg.textContent = "The Word Must be 5 Letters.";
-                statusMsg.classList.remove("small-warning");
-                statusMsg.className = "loading-prompt"; // Unified font styling
+                statusMsg.className = "loading-prompt";
                 shakeRow(currentRow);
                 return;
             }
@@ -558,7 +563,7 @@
 
                 if (response.status === 400) {
                     statusMsg.textContent = data.error || "Not in The Word List";
-                    statusMsg.className = "loading-prompt"; // Unified font styling
+                    statusMsg.className = "loading-prompt";
                     shakeRow(currentRow);
                     isProcessing = false;
                     return;
@@ -567,7 +572,7 @@
                 if (!response.ok) {
                     isUserGameOver = true;
                     statusMsg.textContent = data.error || "Turn error";
-                    statusMsg.className = "loading-prompt"; // Unified font styling
+                    statusMsg.className = "loading-prompt";
                     gameState.gameOver = true;
                     gameState.targetWord = data.target || "UNKNOWN";
                     gameState.statusText = statusMsg.textContent;
@@ -643,20 +648,22 @@
                         saveGlobalStats();
                     }
 
-                    await triggerAiReveal();
+                    // On win, mark AI as revealed internally so it's ready, but DO NOT run the visual reveal yet (modal handles it)
+                    gameState.aiRevealed = true; 
+                    saveState();
 
                     await new Promise(res => setTimeout(res, 1000));
                     if (aiWonOnSameTurn) {
                         statusMsg.textContent = "You Won!"; 
-                        statusMsg.className = "loading-prompt"; // Unified font styling
+                        statusMsg.className = "loading-prompt";
                         gameState.statusText = "You Won!";
                     } else if (aiWonFirst) {
                         statusMsg.textContent = "You Lost!"; 
-                        statusMsg.className = "loading-prompt"; // Unified font styling
+                        statusMsg.className = "loading-prompt";
                         gameState.statusText = "You Lost!";
                     } else {
                         statusMsg.textContent = "Congrats, You Won!"; 
-                        statusMsg.className = "loading-prompt"; // Unified font styling
+                        statusMsg.className = "loading-prompt";
                         gameState.statusText = "Congrats, You Won!";
                     }
                     saveState();
@@ -688,9 +695,13 @@
                         saveGlobalStats();
                     }
 
+                    // On loss/fail, mark AI ready for reveal when closing modal
+                    gameState.aiRevealed = true; 
+                    saveState();
+
                     await new Promise(res => setTimeout(res, 1000));
                     statusMsg.textContent = "Better Luck Next Time!";
-                    statusMsg.className = "loading-prompt"; // Unified font styling
+                    statusMsg.className = "loading-prompt";
                     gameState.statusText = "Better Luck Next Time!";
                     saveState();
 
@@ -704,7 +715,7 @@
 
                 if (aiWonFirst && !gameState.playOutMsgShown) {
                     statusMsg.textContent = "You Lost, Finish Your Game!";
-                    statusMsg.className = "loading-prompt small-warning"; // Unified font styling
+                    statusMsg.className = "loading-prompt small-warning";
                     gameState.statusText = "You Lost, Finish Your Game!";
                     gameState.playOutMsgShown = true; 
                 }
@@ -715,7 +726,7 @@
                 isProcessing = false;
             } catch (err) {
                 statusMsg.textContent = "Failed to Communicate With Server.";
-                statusMsg.className = "loading-prompt"; // Unified font styling
+                statusMsg.className = "loading-prompt";
                 isProcessing = false;
             }
         }
