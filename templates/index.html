@@ -68,7 +68,7 @@
             </div>
 
             <section id="ai-card-wrapper" class="board-wrapper desktop-only">
-                <h2>Computer</h2>
+                <h2 style="font-size: 0.9rem; margin: 2px 0;">Computer</h2>
                 <div id="ai-grid" class="masked-letters" style="transform-origin: top center;"></div>
             </section>
         </div>
@@ -115,19 +115,6 @@
             </div>
         </div>
     </div>
-
-    <style>
-        @media (min-width: 800px) {
-            #keyboard-container { display: none !important; }
-            #player-card-wrapper { margin-bottom: 0 !important; }
-            #status-msg { width: 100%; position: absolute; top: -50px; }
-            #ai-grid-mobile { display: none !important; }
-        }
-        @media (max-width: 799px) {
-            .desktop-only { display: none !important; }
-            #player-grid, #ai-grid-mobile { transform: scale(0.85); }
-        }
-    </style>
 
     <script>
         const ROWS = 6;
@@ -299,10 +286,13 @@
         createGrid("ai-grid-mobile");
 
         function saveState() {
+            return; // ◄ TEMPORARILY DISABLED: WONT SAVE ON REFRESH
             localStorage.setItem("wordle_race_daily_state", JSON.stringify(gameState));
         }
         
         function restoreState() {
+            return; // ◄ TEMPORARILY DISABLED: WONT LOAD ON REFRESH
+
             const saved = localStorage.getItem("wordle_race_daily_state");
             const today = new Date().toISOString().split("T")[0];
 
