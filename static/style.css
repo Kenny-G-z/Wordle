@@ -75,7 +75,6 @@ header h1 {
     -webkit-text-fill-color: transparent;
 }
 
-/* PC Baseline Styles for Subtitle */
 #mobile-subtitle {
     font-family: 'Pacifico', cursive, sans-serif;
     font-size: 2.1rem;
@@ -162,7 +161,6 @@ header h1 {
         0 0 15px rgba(122, 0, 255, 0.6);
 }
 
-/* Enlarged card titles on PC */
 .board-wrapper h2 {
     font-size: 2.1rem;
     font-weight: 400;
@@ -230,7 +228,6 @@ header h1 {
     color: white;
 }
 
-/* Hides ONLY the letters on the AI grids until revealed, leaving background colors visible */
 #ai-grid.masked-letters .tile:not(.revealed),
 #ai-grid-mobile.masked-letters .tile:not(.revealed) {
     color: transparent !important;
@@ -311,6 +308,7 @@ header h1 {
     align-items: center;
     width: 100%;
     max-width: 600px;
+    padding: 0 15px;
 }
 
 .challenge-input-box {
@@ -330,8 +328,9 @@ header h1 {
 
 .input-row {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 14px;
 }
 
@@ -719,7 +718,6 @@ footer a:hover {
         font-size: 2.2rem;
     }
     
-    /* Scaled down subtitle for mobile displays with extra spacing below it */
     #mobile-subtitle {
         display: block;
         font-size: 1.15rem;
@@ -736,20 +734,24 @@ footer a:hover {
         padding-top: 5px;
     }
 
+    /* CARD STRETCHES FLUSH ACROSS SCREEN BOUNDARIES */
     .board-wrapper {
-        padding: 12px;
+        padding: 15px 12px;
         border-radius: 12px;
         width: 100%;
-        max-width: 360px;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
     .board-wrapper h2 {
-        font-size: 1.8rem; 
-        margin-bottom: 6px;
+        font-size: 1.65rem; 
+        margin-bottom: 12px;
     }
     
+    /* GRID FILL CARDS COMPLETELY */
     #player-grid, #ai-grid-mobile, #challenge-grid {
         width: 100%;
+        box-sizing: border-box;
     }
     .row {
         width: 100%;
@@ -765,16 +767,36 @@ footer a:hover {
         border-radius: 6px;
     }
 
-    .challenge-input-box, .input-row {
+    .challenge-input-box {
         width: 100%;
+    }
+    .input-row {
+        width: 100%;
+        flex-direction: column;
     }
     #secret-input {
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: 340px !important;
         box-sizing: border-box;
         height: 50px;
         font-size: 1.6rem;
     }
+    
+    /* BUTTON STACKING ON MOBILE */
+    #endgame-section, #finished-buttons {
+        flex-direction: column !important;
+        gap: 10px !important;
+        width: 100%;
+        align-items: center;
+    }
+    .nav-btn, #start-btn, #reveal-btn, #another-btn {
+        width: 100%;
+        max-width: 340px;
+        text-align: center;
+        padding: 14px 20px !important;
+        font-size: 1.2rem !important;
+    }
+
     .challenge-container .board-wrapper {
         margin-top: 10px !important;
         margin-bottom: 5px !important;
@@ -803,6 +825,8 @@ footer a:hover {
     }
     .challenge-container {
         max-width: 100%;
+        padding: 0 10px;
+        box-sizing: border-box;
     }
     .challenge-container #status-msg, #status-msg {
         font-size: 1.3rem;

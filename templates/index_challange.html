@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=48">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=58">
 </head>
 
 <body>
@@ -119,7 +119,6 @@
             setTimeout(() => { titleEl.classList.add("visible"); }, 1000);
         }
 
-        // Close modal and reveal the "You Tried" text
         document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {
             document.getElementById("challenge-stats-modal").style.display = "none";
             youTriedMsg.style.display = "block";
@@ -174,7 +173,7 @@
             secretInput.disabled = true;
             startBtn.style.display = "none";
             finishedSection.style.display = "none";
-            youTriedMsg.style.display = "none"; // Hide message on new game
+            youTriedMsg.style.display = "none"; 
             
             try {
                 let res = await fetch("/start_challenge", {
