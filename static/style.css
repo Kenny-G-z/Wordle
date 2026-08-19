@@ -51,7 +51,7 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    padding: 10px 16px 15px;
+    padding: 38px 16px 20px;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
 }
@@ -60,7 +60,7 @@ header {
     text-align: center;
     width: 100%;
     max-width: 900px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
     animation: fadeIn 0.4s ease forwards;
 }
 
@@ -86,7 +86,7 @@ header h1 {
         0 0 40px rgba(168, 85, 247, 0.4);
     font-weight: 400;
     margin-top: 10px;
-    margin-bottom: 35px; /* Pushes cards further down on PC */
+    margin-bottom: 50px; 
 }
 
 #game-container, .challenge-container {
@@ -230,8 +230,13 @@ header h1 {
     color: white;
 }
 
-#ai-grid.masked-letters .tile:not(.revealed) {
+/* Hides colors & letters on the AI grids (desktop & mobile) until the reveal loop hits them */
+#ai-grid.masked-letters .tile:not(.revealed),
+#ai-grid-mobile.masked-letters .tile:not(.revealed) {
     color: transparent !important;
+    background-color: rgba(255, 255, 255, 0.015) !important;
+    border-color: var(--tile-empty-border) !important;
+    box-shadow: none !important;
 }
 
 #status-msg:empty {
@@ -363,7 +368,7 @@ header h1 {
 }
 
 .challenge-container .board-wrapper {
-    margin-top: 15px;
+    margin-top: 30px;
 }
 
 #finished-section {
@@ -415,7 +420,7 @@ header h1 {
 }
 
 .footer-line {
-    margin-top: 20px;
+    margin-top: 45px; 
     width: 98%;
     max-width: 1350px;
     border: none;
@@ -717,12 +722,11 @@ footer a:hover {
         font-size: 2.2rem;
     }
     
-    /* Scaled down subtitle for mobile displays */
     #mobile-subtitle {
         display: block;
         font-size: 1.15rem;
         margin-top: -2px;
-        margin-bottom: 5px;
+        margin-bottom: 15px; 
     }
 
     #mobile-layout-wrapper {
@@ -742,8 +746,8 @@ footer a:hover {
     }
     
     .board-wrapper h2 {
-        font-size: 1.35rem;
-        margin-bottom: 6px;
+        font-size: 1.65rem; 
+        margin-bottom: 8px;
     }
     
     #player-grid, #ai-grid-mobile, #challenge-grid {
@@ -808,7 +812,7 @@ footer a:hover {
         min-height: 24px;
     }
     .footer-line {
-        margin-top: 20px !important;
+        margin-top: 40px !important; 
     }
     footer {
         margin-top: 10px !important;

@@ -5,78 +5,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=48">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=56">
 </head>
 
 <body>
+
     <header>
-        <h1>Challenge The Computer</h1>
+        <h1>Welcome to Wordle</h1>
+        <h3 id="mobile-subtitle">You are Playing Against a Computer</h3>
     </header>
 
-    <div class="challenge-container">
-        <section class="challenge-input-box">
-            <label for="secret-input">Enter a 5-Letter Word:</label>
+    {% if load_failed %}
+        <div id="error-banner">The Wordle failed to load.</div>
+    {% endif %}
 
-            <div class="input-row">
-                <input
-                    type="text"
-                    id="secret-input"
-                    maxlength="5"
-                    autocomplete="off"
-                    spellcheck="false"
-                >
-                <button id="start-btn" type="button">Start Guessing</button>
-            </div>
-        </section>
-
-        <main id="game-container">
-            <section class="board-wrapper">
-                <h2>Progress</h2>
-                <div id="challenge-grid"></div>
-            </section>
-        </main>
-
+    <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: auto; padding: 0 5px; box-sizing: border-box; width: 100%;">
+        
         <div id="status-msg"></div>
 
-        <div id="endgame-section" style="display: none;">
-            <button id="reveal-btn" type="button" class="nav-btn">Another Round</button>
-            <a href="/" class="nav-btn">Back to Wordle</a>
-        </div>
-        
-        <div id="you-tried-msg" style="display: none; text-align: center; margin-top: 25px; font-size: 1.8rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);">
-            You Tried
+        <div id="game-container" style="display: flex; justify-content: center; width: 100%; flex-wrap: wrap;">
+            
+            <section id="player-card-wrapper" class="board-wrapper">
+                <h2 id="board-title">Player</h2>
+                <div id="player-grid"></div>
+                <div id="ai-grid-mobile" class="masked-letters" style="display: none;"></div>
+            </section>
+
+            <div id="keyboard-container">
+                <div class="keyboard-row">
+                    <button class="key-btn" data-key="q">Q</button>
+                    <button class="key-btn" data-key="w">W</button>
+                    <button class="key-btn" data-key="e">E</button>
+                    <button class="key-btn" data-key="r">R</button>
+                    <button class="key-btn" data-key="t">T</button>
+                    <button class="key-btn" data-key="y">Y</button>
+                    <button class="key-btn" data-key="u">U</button>
+                    <button class="key-btn" data-key="i">I</button>
+                    <button class="key-btn" data-key="o">O</button>
+                    <button class="key-btn" data-key="p">P</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key-btn" data-key="a">A</button>
+                    <button class="key-btn" data-key="s">S</button>
+                    <button class="key-btn" data-key="d">D</button>
+                    <button class="key-btn" data-key="f">F</button>
+                    <button class="key-btn" data-key="g">G</button>
+                    <button class="key-btn" data-key="h">H</button>
+                    <button class="key-btn" data-key="j">J</button>
+                    <button class="key-btn" data-key="k">K</button>
+                    <button class="key-btn" data-key="l">L</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key-btn special-key" data-key="Enter">ENTER</button>
+                    <button class="key-btn" data-key="z">Z</button>
+                    <button class="key-btn" data-key="x">X</button>
+                    <button class="key-btn" data-key="c">C</button>
+                    <button class="key-btn" data-key="v">V</button>
+                    <button class="key-btn" data-key="b">B</button>
+                    <button class="key-btn" data-key="n">N</button>
+                    <button class="key-btn" data-key="m">M</button>
+                    <button class="key-btn special-key" data-key="Backspace">⌫</button>
+                </div>
+            </div>
+
+            <section id="ai-card-wrapper" class="board-wrapper desktop-only">
+                <h2>Computer</h2>
+                <div id="ai-grid" class="masked-letters"></div>
+            </section>
         </div>
     </div>
 
-    <div id="challenge-stats-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <button id="close-challenge-stats-btn" class="close-btn">✖</button>
-            
-            <h3 style="margin-bottom: 20px; margin-top: 15px;">CHALLENGE STATS</h3>
-            <div class="stats-row" style="margin-bottom: 10px;">
-                <div class="stat-box"><div class="stat-num" id="stat-chal-played">0</div><div class="stat-label">Prompted</div></div>
-                <div class="stat-box"><div class="stat-num" id="stat-chal-won" style="color: var(--color-correct);">0</div><div class="stat-label">Stumped</div></div>
-                <div class="stat-box"><div class="stat-num" id="stat-chal-win-pct">0</div><div class="stat-label">Success %</div></div>
+    <div id="endgame-section" style="display: none; justify-content: center; margin-top: 10px;">
+        <button id="reveal-btn" type="button" class="nav-btn">Reveal Letters</button>
+        <div id="challenge-link-container" style="display: none;">
+            <a href="/challenge" class="nav-btn">Challenge the Computer?</a>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="modal-overlay" style="display: none;">
+        <button id="close-stats-btn" class="global-close-btn">✖</button>
+        
+        <div class="modals-wrapper">
+            <div class="modal-content">
+                <h3>WORDLE STATS</h3>
+                <div class="stats-row">
+                    <div class="stat-box"><div class="stat-num" id="stat-played">0</div><div class="stat-label">Played</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-win-pct">0</div><div class="stat-label">Win %</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-max-streak">0</div><div class="stat-label">Max</div></div>
+                </div>
+
+                <h3>GUESS DISTRIBUTION</h3>
+                <div id="guess-distribution"></div>
             </div>
 
-            <h2 id="challenge-modal-title" class="highlight-word delayed-verdict" style="font-size: 1.8rem; margin-top: 15px; margin-bottom: 10px; text-transform: none;"></h2>
+            <div class="modal-content">
+                <h3 style="margin-bottom: 20px;">PLAYER VS COMPUTER STATS</h3>
+                <div class="stats-row" style="margin-bottom: 20px;">
+                    <div class="stat-box"><div class="stat-num" id="stat-race-played">0</div><div class="stat-label">Played</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-race-win-pct">0</div><div class="stat-label">Win %</div></div>
+                </div>
+                <div class="stats-row" style="margin-bottom: 24px;">
+                    <div class="stat-box"><div class="stat-num" style="color: var(--color-correct);" id="stat-race-won">0</div><div class="stat-label">Wins</div></div>
+                    <div class="stat-box"><div class="stat-num" style="color: var(--color-absent);" id="stat-race-lost">0</div><div class="stat-label">Losses</div></div>
+                </div>
+                <div id="modal-ai-word-reveal-container" style="display: none; margin-top: 5px; padding-top: 15px; border-top: 1px solid var(--card-border);">
+                    <h3 style="color: var(--footer-text-color); margin-bottom: 4px; font-size: 1.05rem;">THE WORD WAS</h3>
+                    <h2 id="modal-ai-word-reveal" style="font-size: 1.6rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.4); margin-bottom: 0; text-transform: uppercase; letter-spacing: 3px;"></h2>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const ROWS = 6;
         const COLS = 5;
-        const grid = document.getElementById("challenge-grid");
-        const statusMsg = document.getElementById("status-msg");
-        const secretInput = document.getElementById("secret-input");
-        const startBtn = document.getElementById("start-btn");
-        const anotherBtn = document.getElementById("reveal-btn");
-        const finishedSection = document.getElementById("endgame-section");
-        const youTriedMsg = document.getElementById("you-tried-msg");
-        
-        let secret = "";
-        let gameOver = false;
-        let globalStats = { challengePlayed: 0, challengeWon: 0 };
+        let currentRow = 0;
+        let aiCurrentRow = 0;
+        let currentGuess = "";
+        let isUserGameOver = document.getElementById("error-banner") !== null;
+        let isRevealing = false;
+        let aiWonFirst = false;
+        let modalClosed = false;
+
+        let gameState = {
+            date: new Date().toISOString().split("T")[0],
+            userGuesses: [],
+            aiGuesses: [],
+            userWon: false,
+            aiWonFirst: false,
+            gameOver: false,
+            statusText: "",
+            aiRevealed: false,
+            statsSaved: false,   
+            targetWord: "",      
+            playOutMsgShown: false 
+        };
+
+        let globalStats = {
+            played: 0,
+            won: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, fail: 0 },
+            racePlayed: 0,
+            raceWon: 0,
+            raceLost: 0
+        };
 
         function loadGlobalStats() {
             const saved = localStorage.getItem("wordle_global_stats"); 
@@ -85,230 +160,526 @@
                 globalStats = { ...globalStats, ...parsed };
             }
         }
-        
+        loadGlobalStats();
+
         function saveGlobalStats() {
             localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));
         }
-        
-        loadGlobalStats();
 
-        function renderChallengeStatsModal(didUserWin) {
-            const modal = document.getElementById("challenge-stats-modal");
-            const titleEl = document.getElementById("challenge-modal-title");
+        function renderStatsModal(didWin, numGuesses, revealedWord = null) {
+            const modal = document.getElementById("stats-modal");
+            const aiRevealContainer = document.getElementById("modal-ai-word-reveal-container");
+            const aiWordEl = document.getElementById("modal-ai-word-reveal");
             
-            titleEl.classList.remove("visible");
-            titleEl.style.color = "var(--footer-text-color)";
-            titleEl.style.textShadow = "0 0 15px rgba(168, 85, 247, 0.4)";
-            
-            if (didUserWin) {
-                titleEl.textContent = "You Finally Got One";
+            if (revealedWord) {
+                aiRevealContainer.style.display = "block"; 
+                aiWordEl.textContent = revealedWord;
             } else {
-                titleEl.textContent = "Satisfied?";
+                aiRevealContainer.style.display = "none";
             }
+
+            document.getElementById("stat-played").textContent = globalStats.played;
+            const winPct = globalStats.played > 0 ? Math.round((globalStats.won / globalStats.played) * 100) : 0;
+            document.getElementById("stat-win-pct").textContent = winPct;
+            document.getElementById("stat-streak").textContent = globalStats.currentStreak;
+            document.getElementById("stat-max-streak").textContent = globalStats.maxStreak;
             
-            document.getElementById("stat-chal-played").textContent = globalStats.challengePlayed || 0;
-            document.getElementById("stat-chal-won").textContent = globalStats.challengeWon || 0;
+            const distContainer = document.getElementById("guess-distribution");
+            distContainer.innerHTML = "";
+            let maxGuesses = 0;
+
+            for (let i = 1; i <= 6; i++) {
+                if (globalStats.distribution[i] > maxGuesses) {
+                    maxGuesses = globalStats.distribution[i];
+                }
+            }
+            if (globalStats.distribution.fail > maxGuesses) {
+                maxGuesses = globalStats.distribution.fail;
+            }
+
+            for (let i = 1; i <= 6; i++) {
+                const count = globalStats.distribution[i];
+                const percentage = maxGuesses > 0 ? Math.max((count / maxGuesses) * 100, 7) : 7;
+                const isCurrentGame = (didWin && numGuesses === i);
+                const barClass = isCurrentGame ? "dist-bar highlight" : "dist-bar";
+                distContainer.innerHTML += `
+                    <div class="dist-row">
+                        <div>${i}</div>
+                        <div class="dist-bar-container">
+                            <div class="${barClass}" style="width: ${percentage}%">${count}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const failCount = globalStats.distribution.fail || 0;
+            const failPercentage = maxGuesses > 0 ? Math.max((failCount / maxGuesses) * 100, 7) : 7;
+            const isFailCurrent = (!didWin && isUserGameOver);
+            const failBarClass = isFailCurrent ? "dist-bar highlight" : "dist-bar";
+            distContainer.innerHTML += `
+                <div class="dist-row">
+                    <div style="font-size: 0.85rem; width: 35px;">FAIL</div>
+                    <div class="dist-bar-container">
+                        <div class="${failBarClass}" style="width: ${failPercentage}%">${failCount}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("stat-race-played").textContent = globalStats.racePlayed || 0;
+            document.getElementById("stat-race-won").textContent = globalStats.raceWon || 0;
+            document.getElementById("stat-race-lost").textContent = globalStats.raceLost || 0;
             
-            const played = globalStats.challengePlayed || 0;
-            const won = globalStats.challengeWon || 0;
-            const pct = played > 0 ? Math.round((won / played) * 100) : 0;
-            
-            document.getElementById("stat-chal-win-pct").textContent = pct;
+            const totalRaces = globalStats.racePlayed || 0;
+            const totalRaceWins = globalStats.raceWon || 0;
+            const raceWinPct = totalRaces > 0 ? Math.round((totalRaceWins / totalRaces) * 100) : 0;
+            document.getElementById("stat-race-win-pct").textContent = raceWinPct;
             
             modal.style.display = "flex";
-            setTimeout(() => { titleEl.classList.add("visible"); }, 1000);
         }
 
-        // Close modal and reveal the "You Tried" text
-        document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {
-            document.getElementById("challenge-stats-modal").style.display = "none";
-            youTriedMsg.style.display = "block";
+        document.getElementById("close-stats-btn").addEventListener("click", () => {
+            document.getElementById("stats-modal").style.display = "none";
+            modalClosed = true;
+
+            if (window.innerWidth < 800) {
+                document.getElementById("keyboard-container").style.display = "none";
+                document.getElementById("player-grid").style.display = "none";
+                document.getElementById("ai-grid-mobile").style.display = "grid";
+                document.getElementById("board-title").textContent = "Computer";
+            }
+
+            endgameSection.style.setProperty("display", "flex", "important");
+            if (gameState.aiRevealed) {
+                revealBtn.style.display = "none"; 
+                challengeContainer.style.display = "block";
+            } else {
+                revealBtn.style.display = "inline-flex";
+            }
         });
 
-        for (let r = 0; r < ROWS; r++) {
-            const row = document.createElement("div");
-            row.className = "row";
-            row.id = `challenge-row-${r}`;
+        const endgameSection = document.getElementById("endgame-section");
+        const revealBtn = document.getElementById("reveal-btn");
+        const challengeContainer = document.getElementById("challenge-link-container");
+        const statusMsg = document.getElementById("status-msg");
 
-            for (let c = 0; c < COLS; c++) {
-                const tile = document.createElement("div");
-                tile.className = "tile";
-                tile.id = `challenge-tile-${r}-${c}`;
-                row.appendChild(tile);
-            }
-            grid.appendChild(row);
-        }
+        function createGrid(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
 
-        function resetGrid() {
             for (let r = 0; r < ROWS; r++) {
+                const row = document.createElement("div");
+                row.className = "row";
+                row.id = `${containerId}-row-${r}`;
+
                 for (let c = 0; c < COLS; c++) {
-                    const tile = document.getElementById(`challenge-tile-${r}-${c}`);
-                    if (tile) {
-                        tile.textContent = ""; 
-                        tile.removeAttribute("data-state"); 
-                        tile.className = "tile";
-                    }
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.id = `${containerId}-tile-${r}-${c}`;
+                    row.appendChild(tile);
                 }
+                container.appendChild(row);
             }
         }
 
-        startBtn.addEventListener("click", startGame);
+        createGrid("player-grid");
+        createGrid("ai-grid");
+        createGrid("ai-grid-mobile");
+
+        function saveState() {
+            return; // ◄ TEMPORARILY DISABLED: WONT SAVE ON REFRESH
+            localStorage.setItem("wordle_race_daily_state", JSON.stringify(gameState));
+        }
         
-        secretInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                startGame();
-            }
-        });
-        
-        async function startGame() {
-            secret = secretInput.value.trim().toLowerCase();
-            
-            if (secret.length !== 5) {
-                statusMsg.textContent = "The Word Must be 5 Letters.";
-                return;
-            }
-            
-            resetGrid();
-            statusMsg.textContent = "Computer is Loading Turn 1...";
-            gameOver = false;
-            secretInput.disabled = true;
-            startBtn.style.display = "none";
-            finishedSection.style.display = "none";
-            youTriedMsg.style.display = "none"; // Hide message on new game
-            
+        function restoreState() {
+            return; // ◄ TEMPORARILY DISABLED: WONT LOAD ON REFRESH
+
+            const saved = localStorage.getItem("wordle_race_daily_state");
+            const today = new Date().toISOString().split("T")[0];
+
+            if (!saved) return;
             try {
-                let res = await fetch("/start_challenge", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ secret: secret })
+                const parsed = JSON.parse(saved);
+                if (parsed.date !== today) {
+                    localStorage.removeItem("wordle_race_daily_state"); 
+                    return;
+                }
+                
+                gameState = parsed;
+                currentRow = gameState.userGuesses.length;
+                aiCurrentRow = gameState.aiGuesses.length;
+                aiWonFirst = gameState.aiWonFirst;
+                isUserGameOver = gameState.gameOver;
+                statusMsg.textContent = gameState.statusText;
+                
+                if (gameState.statusText.includes("Play Out Your game")) {
+                    statusMsg.classList.add("small-warning");
+                }
+                
+                gameState.userGuesses.forEach((item, r) => {
+                    paintPlayerFeedbackInstant(r, item.guess, item.feedback);
+                });
+                
+                gameState.aiGuesses.forEach((item, r) => {
+                    paintAiFeedbackInstant(r, item.guess, item.feedback, "ai-grid");
+                    paintAiFeedbackInstant(r, item.guess, item.feedback, "ai-grid-mobile");
                 });
 
-                let data = await res.json();
-                
-                if (!res.ok) {
-                    statusMsg.textContent = data.error || "Failed to initialize The Computer.";
-                    secretInput.disabled = false;
-                    startBtn.style.display = "inline-block";
-                    return;
-                }
-
-                let challengeId = data.challenge_id;
-                let currentRound = 0;
-                await renderRow(currentRound, data.guess, data.feedback);
-
-                if (data.solved) {
-                    gameOver = true;
-                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
-                    saveGlobalStats();
-                    statusMsg.textContent = "";
-                    await new Promise(r => setTimeout(r, 1000));
-                    statusMsg.textContent = "Computer Solved It!";
-                    
-                    setTimeout(() => {
-                        showFinished(); 
-                        renderChallengeStatsModal(false);
-                    }, 1000);
-                    return;
-                }
-
-                while (currentRound < 5 && !gameOver) {
-                    currentRound++;
-                    statusMsg.textContent = `Computer is Calculating Turn ${currentRound + 1}...`;
-
-                    res = await fetch("/step_challenge", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ challenge_id: challengeId, secret: secret })
-                    });
-
-                    data = await res.json();
-                    
-                    if (data.ended || !res.ok) break;
-                    await renderRow(currentRound, data.guess, data.feedback);
-                    
-                    if (data.solved) {
-                        gameOver = true; 
-                        break;
+                if (gameState.gameOver) {
+                    if (gameState.aiRevealed) {
+                        document.getElementById("ai-grid").classList.remove("masked-letters");
+                        document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
+                        
+                        for (let r = 0; r < aiCurrentRow; r++) {
+                            for (let c = 0; c < COLS; c++) {
+                                const desktopTile = document.getElementById(`ai-grid-tile-${r}-${c}`);
+                                const mobileTile = document.getElementById(`ai-grid-mobile-tile-${r}-${c}`);
+                                
+                                if (desktopTile) {
+                                    desktopTile.textContent = desktopTile.dataset.letter || ""; 
+                                    desktopTile.classList.add("revealed");
+                                }
+                                if (mobileTile) {
+                                    mobileTile.textContent = mobileTile.dataset.letter || ""; 
+                                    mobileTile.classList.add("revealed");
+                                }
+                            }
+                        }
                     }
+                }
+            } catch (e) {
+                localStorage.removeItem("wordle_race_daily_state");
+            }
+        }
+
+        async function triggerAiReveal() {
+            if (isRevealing) return;
+            isRevealing = true;
+            revealBtn.style.display = "none";
+            const isMobile = window.innerWidth < 800;
+            const targetGridId = isMobile ? "ai-grid-mobile" : "ai-grid";
+            
+            const playedTiles = [];
+            for (let r = 0; r < aiCurrentRow; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = document.getElementById(`${targetGridId}-tile-${r}-${c}`);
+                    if (tile) playedTiles.push(tile);
+                    
+                    const otherTileId = isMobile ? `ai-grid-tile-${r}-${c}` : `ai-grid-mobile-tile-${r}-${c}`;
+                    const otherTile = document.getElementById(otherTileId);
+                    if (otherTile) {
+                        otherTile.textContent = otherTile.dataset.letter || "";
+                        otherTile.classList.add("revealed");
+                    }
+                }
+            }
+
+            for (let i = 0; i < playedTiles.length; i++) {
+                const tile = playedTiles[i];
+                tile.classList.remove("dramatic-flip");
+                void tile.offsetWidth;
+                tile.classList.add("dramatic-flip");
+                await new Promise(res => setTimeout(res, 100));
+                tile.textContent = tile.dataset.letter || "";
+                tile.classList.add("revealed");
+                await new Promise(res => setTimeout(res, 60));
+            }
+
+            document.getElementById("ai-grid").classList.remove("masked-letters");
+            document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
+            
+            gameState.aiRevealed = true;
+            saveState();
+            
+            setTimeout(() => {
+                challengeContainer.style.display = "block"; 
+                revealBtn.style.display = "none";
+            }, 500);
+        }
+        
+        revealBtn.addEventListener("click", triggerAiReveal);
+
+        document.querySelectorAll(".key-btn").forEach(button => {
+            button.addEventListener("click", () => {
+                if (isUserGameOver) return;
+                const keyValue = button.getAttribute("data-key");
+
+                if (keyValue === "Enter") {
+                    submitGuess();
+                } else if (keyValue === "Backspace") {
+                    if (currentGuess.length > 0) {
+                        currentGuess = currentGuess.slice(0, -1);
+                        updateCurrentRow();
+                    }
+                } else if (/^[a-zA-Z]$/.test(keyValue)) {
+                    if (currentGuess.length < COLS) {
+                        currentGuess += keyValue.toLowerCase();
+                        updateCurrentRow();
+                    }
+                }
+            });
+        });
+
+        window.addEventListener("keydown", (e) => {
+            if (isUserGameOver) return;
+            if (statusMsg.textContent.includes("Play Out Your game") && (e.key === "Backspace" || /^[a-zA-Z]$/.test(e.key))) {
+                statusMsg.textContent = "";
+                statusMsg.classList.remove("small-warning");
+                gameState.statusText = "";
+                saveState();
+            }
+
+            if (e.key === "Enter") {
+                submitGuess();
+            } else if (e.key === "Backspace") {
+                if (currentGuess.length > 0) {
+                    currentGuess = currentGuess.slice(0, -1); 
+                    updateCurrentRow();
+                }
+            } else if (/^[a-zA-Z]$/.test(e.key)) {
+                if (currentGuess.length < COLS) {
+                    currentGuess += e.key.toLowerCase(); 
+                    updateCurrentRow();
+                }
+            }
+        });
+
+        function updateCurrentRow() {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`player-grid-tile-${currentRow}-${c}`);
+                if (c < currentGuess.length) {
+                    tile.textContent = currentGuess[c].toUpperCase(); 
+                    tile.dataset.state = "active";
+                } else {
+                    tile.textContent = ""; 
+                    tile.removeAttribute("data-state");
+                }
+            }
+        }
+
+        function shakeRow(rowIdx) {
+            const rowElem = document.getElementById(`player-grid-row-${rowIdx}`);
+            rowElem.classList.remove("shake");
+            void rowElem.offsetWidth;
+            rowElem.classList.add("shake");
+        }
+
+        function paintPlayerFeedbackInstant(rowIdx, word, feedback) {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`player-grid-tile-${rowIdx}-${c}`);
+                tile.textContent = word[c].toUpperCase();
+                if (feedback[c] === 2) tile.dataset.state = "correct";
+                else if (feedback[c] === 1) tile.dataset.state = "present";
+                else tile.dataset.state = "absent";
+            }
+        }
+
+        function paintAiFeedbackInstant(rowIdx, word, feedback, containerId) {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`${containerId}-tile-${rowIdx}-${c}`);
+                if (!tile) continue;
+                tile.dataset.letter = word[c].toUpperCase();
+                tile.textContent = "";
+                if (feedback[c] === 2) tile.dataset.state = "correct";
+                else if (feedback[c] === 1) tile.dataset.state = "present";
+                else tile.dataset.state = "absent";
+            }
+        }
+
+        async function animateAiRow(rowIdx, aiWord, aiFeedback, containerId) {
+            for (let c = 0; c < COLS; c++) {
+                const tile = document.getElementById(`${containerId}-tile-${rowIdx}-${c}`);
+                if (!tile) continue;
+                tile.dataset.letter = aiWord[c].toUpperCase();
+                tile.textContent = aiWord[c].toUpperCase();
+                tile.classList.add("dramatic-flip");
+
+                if (aiFeedback[c] === 2) tile.dataset.state = "correct";
+                else if (aiFeedback[c] === 1) tile.dataset.state = "present";
+                else tile.dataset.state = "absent";
+                await new Promise(res => setTimeout(res, 200));
+            }
+        }
+
+        async function submitGuess() {
+            if (currentGuess.length !== COLS) {
+                statusMsg.textContent = "The Word Must be 5 Letters.";
+                statusMsg.classList.remove("small-warning", "loading-prompt");
+                shakeRow(currentRow);
+                return;
+            }
+
+            statusMsg.textContent = "Loading...";
+            statusMsg.className = "loading-prompt";
+
+            try {
+                const response = await fetch("/turn", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ guess: currentGuess })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 400) {
+                    statusMsg.textContent = data.error || "Not in The Word List";
+                    statusMsg.className = "";
+                    shakeRow(currentRow);
+                    return;
+                }
+
+                if (!response.ok) {
+                    isUserGameOver = true;
+                    statusMsg.textContent = data.error || "Turn error";
+                    statusMsg.className = "";
+                    gameState.gameOver = true;
+                    gameState.targetWord = data.target || "UNKNOWN";
+                    gameState.statusText = statusMsg.textContent;
+                    saveState();
+                    return;
                 }
 
                 statusMsg.textContent = "";
-                await new Promise(r => setTimeout(r, 1000));
+                statusMsg.className = "";
 
-                let userWon = false;
+                let aiWonThisTurn = false;
+                let aiPromise = Promise.resolve();
 
-                if (data.solved) {
-                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; 
-                    statusMsg.textContent = "Computer Solved It!";
-                } else if (currentRound >= 5) {
-                    userWon = true;
-                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
-                    globalStats.challengeWon = (globalStats.challengeWon || 0) + 1;
-                    statusMsg.textContent = "Congrats, You Stumped the Computer!"; 
+                if (data.ai) {
+                    const aiRowIdx = aiCurrentRow; 
+                    const aiWord = data.ai.guess;
+                    const aiFeedback = data.ai.feedback;
+                    gameState.aiGuesses.push({ guess: aiWord, feedback: aiFeedback });
+                    aiCurrentRow++;
+
+                    if (data.ai.won) aiWonThisTurn = true;
+
+                    aiPromise = Promise.all([
+                        animateAiRow(aiRowIdx, aiWord, aiFeedback, "ai-grid"),
+                        animateAiRow(aiRowIdx, aiWord, aiFeedback, "ai-grid-mobile")
+                    ]);
                 }
 
-                saveGlobalStats();
+                const playerPromise = (async () => {
+                    const playerRowIdx = currentRow;
+                    const userWord = data.user.guess;
+                    const userFeedback = data.user.feedback;
+
+                    for (let c = 0; c < COLS; c++) {
+                        const tile = document.getElementById(`player-grid-tile-${playerRowIdx}-${c}`);
+                        tile.textContent = userWord[c].toUpperCase();
+                        tile.classList.add("dramatic-flip");
+
+                        if (userFeedback[c] === 2) tile.dataset.state = "correct";
+                        else if (userFeedback[c] === 1) tile.dataset.state = "present";
+                        else tile.dataset.state = "absent";
+                        await new Promise(res => setTimeout(res, 200));
+                    }
+                })();
+
+                await Promise.all([aiPromise, playerPromise]);
                 
-                setTimeout(() => {
-                    showFinished(); 
-                    renderChallengeStatsModal(userWon);
-                }, 1000);
-            
+                gameState.userGuesses.push({guess: data.user.guess, feedback: data.user.feedback});
+                if (data.target) {gameState.targetWord = data.target;}
+
+                if (data.user.won) {
+                    isUserGameOver = true;
+                    gameState.gameOver = true;
+                    gameState.userWon = true;
+                    const aiWonOnSameTurn = aiWonThisTurn && (currentRow === aiCurrentRow - 1);
+
+                    if (!gameState.statsSaved) {
+                        globalStats.played++;
+                        globalStats.won++;
+                        globalStats.currentStreak++;
+                        if (globalStats.currentStreak > globalStats.maxStreak) {
+                            globalStats.maxStreak = globalStats.currentStreak;
+                        }
+                        globalStats.distribution[currentRow + 1]++;
+                        globalStats.racePlayed = (globalStats.racePlayed || 0) + 1;
+                        
+                        if (aiWonOnSameTurn) {globalStats.raceWon = (globalStats.raceWon || 0) + 1;} 
+                        else if (aiWonFirst) {globalStats.raceLost = (globalStats.raceLost || 0) + 1;} 
+                        else {globalStats.raceWon = (globalStats.raceWon || 0) + 1;}
+                        
+                        gameState.statsSaved = true;
+                        saveGlobalStats();
+                    }
+
+                    await new Promise(res => setTimeout(res, 1000));
+                    if (aiWonOnSameTurn) {
+                        statusMsg.textContent = "You Won!"; 
+                        gameState.statusText = "You Won!";
+                    } else if (aiWonFirst) {
+                        statusMsg.textContent = "You Lost!"; 
+                        gameState.statusText = "You Lost!";
+                    } else {
+                        statusMsg.textContent = "Congrats, You Won!"; 
+                        gameState.statusText = "Congrats, You Won!";
+                    }
+                    saveState();
+
+                    setTimeout(() => {
+                        renderStatsModal(true, currentRow + 1, gameState.targetWord); 
+                    }, 500);
+
+                    return;
+                }
+
+                if (aiWonThisTurn) {
+                    aiWonFirst = true; 
+                    gameState.aiWonFirst = true;
+                }
+
+                if (currentRow === ROWS - 1) {
+                    isUserGameOver = true;
+                    gameState.gameOver = true;
+
+                    if (!gameState.statsSaved) {
+                        globalStats.played++;
+                        globalStats.currentStreak = 0;
+                        globalStats.distribution.fail++;
+                        globalStats.racePlayed = (globalStats.racePlayed || 0) + 1;
+                        globalStats.raceLost = (globalStats.raceLost || 0) + 1;
+                        gameState.statsSaved = true;
+                        saveGlobalStats();
+                    }
+
+                    await new Promise(res => setTimeout(res, 1000));
+                    statusMsg.textContent = "Better Luck Next Time!";
+                    gameState.statusText = "Better Luck Next Time!";
+                    saveState();
+
+                    setTimeout(() => {
+                        renderStatsModal(false, 0, gameState.targetWord); 
+                    }, 500);
+
+                    return;
+                }
+
+                if (aiWonFirst && !gameState.playOutMsgShown) {
+                    statusMsg.textContent = "You Lost, Finish Your Game!";
+                    statusMsg.classList.add("small-warning");
+                    gameState.statusText = "You Lost, Finish Your Game!";
+                    gameState.playOutMsgShown = true; 
+                }
+
+                currentRow++;
+                currentGuess = "";
+                saveState();
             } catch (err) {
-                console.error(err);
                 statusMsg.textContent = "Failed to Communicate With Server.";
-                secretInput.disabled = false;
-                startBtn.style.display = "inline-block";
+                statusMsg.className = "";
             }
         }
 
-        async function renderRow(rowIdx, guessWord, feedbackArray) {
-            const word = guessWord.toUpperCase();
-            
-            for (let c = 0; c < COLS; c++) {
-                const tile = document.getElementById(`challenge-tile-${rowIdx}-${c}`);
-                if (!tile) continue;
-
-                tile.textContent = word[c];
-                tile.classList.add("dramatic-flip");
-
-                if (feedbackArray[c] === 2) {
-                    tile.dataset.state = "correct";
-                } else if (feedbackArray[c] === 1) {
-                    tile.dataset.state = "present";
-                } else {
-                    tile.dataset.state = "absent";
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 180));
-            }
-            await new Promise(resolve => setTimeout(resolve, 400));
-        }
-
-        function showFinished() {
-            finishedSection.style.setProperty("display", "flex", "important");
-        }
-
-        anotherBtn.addEventListener("click", () => {
-            secretInput.value = "";
-            secretInput.disabled = false;
-            startBtn.style.display = "inline-block";
-            statusMsg.textContent = "";
-            finishedSection.style.display = "none";
-            youTriedMsg.style.display = "none";
-            gameOver = false;
-            resetGrid();
-            secretInput.focus();
-        });
+        restoreState();
     </script>
 
     <hr class="footer-line">
-
     <footer>
         <p>Created by Kenny</p>
         <a href="https://github.com/Kenny-G-z" target="_blank">View my GitHub</a>
     </footer>
-
 </body>
 
 </html>
