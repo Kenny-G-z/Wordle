@@ -12,20 +12,22 @@
 
     <header>
         <h1>Welcome to Wordle</h1>
+        <h3 id="mobile-subtitle">Welcome to Wordle</h3>
+
     </header>
 
     {% if load_failed %}
         <div id="error-banner">The Wordle failed to load.</div>
     {% endif %}
 
-    <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 5px; box-sizing: border-box;">
+    <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 5px; box-sizing: border-box;">
         
         <div id="status-msg" style="margin: 2px 0 6px 0; min-height: 28px; text-align: center;"></div>
 
-        <div id="game-container" style="display: flex; gap: 64px; justify-content: center; width: 100%; flex-wrap: wrap;">
+        <div id="game-container" style="display: flex; gap: 25px; justify-content: center; width: 100%; flex-wrap: wrap;">
             
-            <section id="player-card-wrapper" class="board-wrapper" style="margin-bottom: 12px;">
-                <h2 id="board-title" style="font-size: 0.9rem; margin: 2px 0;">Player</h2>
+            <section id="player-card-wrapper" class="board-wrapper">
+                <h2 id="board-title">Player</h2>
                 <div id="player-grid" style="transform-origin: top center;"></div>
                 <div id="ai-grid-mobile" class="masked-letters" style="transform-origin: top center; display: none;"></div>
             </section>
@@ -68,7 +70,7 @@
             </div>
 
             <section id="ai-card-wrapper" class="board-wrapper desktop-only">
-                <h2 style="font-size: 0.9rem; margin: 2px 0;">Computer</h2>
+                <h2>Computer</h2>
                 <div id="ai-grid" class="masked-letters" style="transform-origin: top center;"></div>
             </section>
         </div>
@@ -115,6 +117,25 @@
             </div>
         </div>
     </div>
+
+    <style>
+        @media (min-width: 800px) {
+            #keyboard-container { display: none !important; }
+            #player-card-wrapper { margin-bottom: 0 !important; }
+            #ai-grid-mobile { display: none !important; }
+            
+            #status-msg { 
+                position: static !important; 
+                order: 3; 
+                margin-top: 30px !important; 
+                font-size: 2rem !important; 
+            }
+        }
+        @media (max-width: 799px) {
+            .desktop-only { display: none !important; }
+            #player-grid, #ai-grid-mobile { transform: scale(0.85); }
+        }
+    </style>
 
     <script>
         const ROWS = 6;
