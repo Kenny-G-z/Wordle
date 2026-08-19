@@ -756,6 +756,32 @@ footer a:hover {
         border-radius: 6px;
     }
 
+    /* Challenge Mode Mobile Stacking Overrides */
+    #endgame-section {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    #finished-buttons {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+        align-items: center !important;
+    }
+
+    #finished-buttons .nav-btn, 
+    .challenge-container .nav-btn,
+    #start-btn {
+        width: 100% !important;
+        max-width: 340px !important;
+        text-align: center !important;
+        padding: 14px 20px !important;
+        font-size: 1.2rem !important;
+        box-sizing: border-box;
+    }
+
     .challenge-container {
         max-width: 100%;
         padding: 0 10px;
