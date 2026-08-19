@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=68">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=69">
 </head>
 
 <body>
@@ -133,7 +133,8 @@
         let showingComputerCard = sessionStorage.getItem("wordle_showing_computer") === "true";
 
         async function flipCard() {
-            if (!gameState.aiRevealed) return;
+            // Allow flipping to computer card if game is over (even if letters aren't fully revealed yet)
+            if (!isUserGameOver) return;
             
             const cardWrapper = document.getElementById("player-card-wrapper");
             cardWrapper.classList.add("card-flip-anim");
@@ -155,7 +156,7 @@
 
             if (window.innerWidth >= 800) return;
 
-            if (showingComputerCard && gameState.aiRevealed) {
+            if (showingComputerCard && isUserGameOver) {
                 if(playerGrid) playerGrid.style.display = "none";
                 if(aiGridMobile) aiGridMobile.style.display = "grid";
                 if(boardTitle) boardTitle.textContent = "Computer";
@@ -277,13 +278,16 @@
             modal.style.display = "flex";
         }
 
-        // STATS MODAL CLOSE HANDLER (Triggers reveal sequence ONLY AFTER modal is dismissed)
+        // STATS MODAL CLOSE HANDLER
         document.getElementById("close-stats-btn").addEventListener("click", async () => {
             document.getElementById("stats-modal").style.display = "none";
             modalClosed = true;
 
-            if (window.innerWidth < 800 && !gameState.aiRevealed) {
-                await triggerAiReveal();
+            if (window.innerWidth < 800) {
+                // Instantly unlock flip button visibility so user can flip to computer card
+                document.body.classList.add("ai-revealed-mobile");
+                
+                // Switch mobile view to the computer card immediately without revealing letters yet
                 showingComputerCard = true;
                 sessionStorage.setItem("wordle_showing_computer", "true");
                 applyCardView();
@@ -363,23 +367,26 @@
                     paintAiFeedbackInstant(r, item.guess, item.feedback, "ai-grid-mobile");
                 });
 
-                if (gameState.aiRevealed) {
-                    document.getElementById("ai-grid").classList.remove("masked-letters");
-                    document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
+                if (isUserGameOver) {
                     document.body.classList.add("ai-revealed-mobile");
                     
-                    for (let r = 0; r < aiCurrentRow; r++) {
-                        for (let c = 0; c < COLS; c++) {
-                            const desktopTile = document.getElementById(`ai-grid-tile-${r}-${c}`);
-                            const mobileTile = document.getElementById(`ai-grid-mobile-tile-${r}-${c}`);
-                            
-                            if (desktopTile) {
-                                desktopTile.textContent = desktopTile.dataset.letter || ""; 
-                                desktopTile.classList.add("revealed");
-                            }
-                            if (mobileTile) {
-                                mobileTile.textContent = mobileTile.dataset.letter || ""; 
-                                mobileTile.classList.add("revealed");
+                    if (gameState.aiRevealed) {
+                        document.getElementById("ai-grid").classList.remove("masked-letters");
+                        document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
+                        
+                        for (let r = 0; r < aiCurrentRow; r++) {
+                            for (let c = 0; c < COLS; c++) {
+                                const desktopTile = document.getElementById(`ai-grid-tile-${r}-${c}`);
+                                const mobileTile = document.getElementById(`ai-grid-mobile-tile-${r}-${c}`);
+                                
+                                if (desktopTile) {
+                                    desktopTile.textContent = desktopTile.dataset.letter || ""; 
+                                    desktopTile.classList.add("revealed");
+                                }
+                                if (mobileTile) {
+                                    mobileTile.textContent = mobileTile.dataset.letter || ""; 
+                                    mobileTile.classList.add("revealed");
+                                }
                             }
                         }
                     }
