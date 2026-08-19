@@ -271,24 +271,28 @@ header h1 {
     display: none;
 }
 
-/* UNIFIED STATUS TYPOGRAPHY FONT RULE */
+/* UNIFIED STATUS TYPOGRAPHY FONT RULE MATCHING "PLAYER" / TITLES */
 #status-msg, 
 #status-msg.loading-prompt, 
 #status-msg.small-warning {
     font-family: var(--font-family) !important;
-    font-size: 1.7rem !important;
+    font-size: 2.1rem !important;
+    font-weight: 400 !important;
     color: var(--footer-text-color) !important;
-    text-shadow: 0 0 15px rgba(168, 85, 247, 0.6), 0 0 25px rgba(122, 0, 255, 0.5) !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: 
+        0 0 8px rgba(168, 85, 247, 0.7),
+        0 0 20px rgba(122, 0, 255, 0.7),
+        0 0 40px rgba(168, 85, 247, 0.4) !important;
     margin: 10px 0;
     min-height: 30px;
     text-align: center;
-    letter-spacing: 1px;
 }
 
 .challenge-container #status-msg {
     margin: 10px 0;
     min-height: 30px;
-    font-size: 1.8rem;
+    font-size: 2.1rem !important;
 }
 
 #endgame-section {
@@ -671,7 +675,7 @@ footer a:hover {
         position: static !important;
         order: 3;
         margin-top: 15px !important;
-        font-size: 1.8rem !important;
+        font-size: 2.1rem !important;
     }
 }
 
