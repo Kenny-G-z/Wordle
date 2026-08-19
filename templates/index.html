@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=56">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=57">
 </head>
 
 <body>
@@ -127,6 +127,7 @@
         let isRevealing = false;
         let aiWonFirst = false;
         let modalClosed = false;
+        let isProcessing = false; // Prevents enter button spamming
 
         let gameState = {
             date: new Date().toISOString().split("T")[0],
@@ -400,7 +401,7 @@
 
         document.querySelectorAll(".key-btn").forEach(button => {
             button.addEventListener("click", () => {
-                if (isUserGameOver) return;
+                if (isUserGameOver || isProcessing) return; // Block spam clicks
                 const keyValue = button.getAttribute("data-key");
 
                 if (keyValue === "Enter") {
@@ -420,7 +421,7 @@
         });
 
         window.addEventListener("keydown", (e) => {
-            if (isUserGameOver) return;
+            if (isUserGameOver || isProcessing) return; // Block spam presses
             if (statusMsg.textContent.includes("Play Out Your game") && (e.key === "Backspace" || /^[a-zA-Z]$/.test(e.key))) {
                 statusMsg.textContent = "";
                 statusMsg.classList.remove("small-warning");
@@ -508,6 +509,7 @@
                 return;
             }
 
+            isProcessing = true; // Lock inputs
             statusMsg.textContent = "Loading...";
             statusMsg.className = "loading-prompt";
 
@@ -524,6 +526,7 @@
                     statusMsg.textContent = data.error || "Not in The Word List";
                     statusMsg.className = "";
                     shakeRow(currentRow);
+                    isProcessing = false;
                     return;
                 }
 
@@ -535,6 +538,7 @@
                     gameState.targetWord = data.target || "UNKNOWN";
                     gameState.statusText = statusMsg.textContent;
                     saveState();
+                    isProcessing = false;
                     return;
                 }
 
@@ -622,6 +626,7 @@
                         renderStatsModal(true, currentRow + 1, gameState.targetWord); 
                     }, 500);
 
+                    isProcessing = false;
                     return;
                 }
 
@@ -653,6 +658,7 @@
                         renderStatsModal(false, 0, gameState.targetWord); 
                     }, 500);
 
+                    isProcessing = false;
                     return;
                 }
 
@@ -666,9 +672,11 @@
                 currentRow++;
                 currentGuess = "";
                 saveState();
+                isProcessing = false; // Unlock inputs for next turn
             } catch (err) {
                 statusMsg.textContent = "Failed to Communicate With Server.";
                 statusMsg.className = "";
+                isProcessing = false;
             }
         }
 

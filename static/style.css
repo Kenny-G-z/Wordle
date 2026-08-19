@@ -230,13 +230,10 @@ header h1 {
     color: white;
 }
 
-/* Hides colors & letters on the AI grids (desktop & mobile) until the reveal loop hits them */
+/* Hides ONLY the letters on the AI grids until revealed, leaving background colors visible */
 #ai-grid.masked-letters .tile:not(.revealed),
 #ai-grid-mobile.masked-letters .tile:not(.revealed) {
     color: transparent !important;
-    background-color: rgba(255, 255, 255, 0.015) !important;
-    border-color: var(--tile-empty-border) !important;
-    box-shadow: none !important;
 }
 
 #status-msg:empty {
@@ -722,11 +719,12 @@ footer a:hover {
         font-size: 2.2rem;
     }
     
+    /* Scaled down subtitle for mobile displays with extra spacing below it */
     #mobile-subtitle {
         display: block;
         font-size: 1.15rem;
         margin-top: -2px;
-        margin-bottom: 15px; 
+        margin-bottom: 20px; 
     }
 
     #mobile-layout-wrapper {
@@ -746,8 +744,8 @@ footer a:hover {
     }
     
     .board-wrapper h2 {
-        font-size: 1.65rem; 
-        margin-bottom: 8px;
+        font-size: 1.8rem; 
+        margin-bottom: 6px;
     }
     
     #player-grid, #ai-grid-mobile, #challenge-grid {
@@ -812,7 +810,7 @@ footer a:hover {
         min-height: 24px;
     }
     .footer-line {
-        margin-top: 40px !important; 
+        margin-top: 45px !important; 
     }
     footer {
         margin-top: 10px !important;
