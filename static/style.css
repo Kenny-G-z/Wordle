@@ -151,7 +151,7 @@ header h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative; /* Crucial for positioning the absolute flip button */
+    position: relative;
     transition: border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -163,7 +163,6 @@ header h1 {
         0 0 15px rgba(122, 0, 255, 0.6);
 }
 
-/* Flip symbol button styling */
 .flip-btn {
     position: absolute;
     top: 14px;
@@ -175,7 +174,7 @@ header h1 {
     padding: 6px 10px;
     border-radius: 8px;
     cursor: pointer;
-    display: none; /* Hidden by default until revealed */
+    display: none;
     transition: background 0.2s, transform 0.2s;
     z-index: 5;
 }
@@ -185,7 +184,6 @@ header h1 {
     transform: scale(1.05);
 }
 
-/* Enlarged card titles on PC */
 .board-wrapper h2 {
     font-size: 2.1rem;
     font-weight: 400;
@@ -262,10 +260,6 @@ header h1 {
     display: none;
 }
 
-#status-msg.small-warning {
-    font-size: 1.6rem;
-}
-
 #status-msg {
     margin: 10px 0;
     font-size: 1.8rem;
@@ -285,11 +279,12 @@ header h1 {
     font-size: 1.8rem;
 }
 
-#status-msg.loading-prompt {
-    font-family: var(--font-family);
-    font-size: 1.6rem;
-    color: var(--footer-text-color);
-    text-shadow: 0 0 15px rgba(168, 85, 247, 0.6), 0 0 25px rgba(122, 0, 255, 0.5);
+/* UNIFIED STATUS FONT FORMATTING RULE */
+#status-msg, #status-msg.loading-prompt, #status-msg.small-warning {
+    font-family: var(--font-family) !important;
+    font-size: 1.7rem !important;
+    color: var(--footer-text-color) !important;
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.6), 0 0 25px rgba(122, 0, 255, 0.5) !important;
 }
 
 #endgame-section {
@@ -764,17 +759,11 @@ footer a:hover {
         max-width: 360px;
     }
     
-    /* ENLARGED MOBILE FONT SIZES FOR TITLES & LOADING PROMPTS */
     .board-wrapper h2 {
         font-size: 2.1rem !important; 
         margin-bottom: 8px;
     }
-    
-    #status-msg.loading-prompt {
-        font-size: 1.95rem !important;
-    }
 
-    /* SHOW THE FLIP BUTTON ONLY WHEN REVEALED ON MOBILE */
     body.ai-revealed-mobile .flip-btn {
         display: block !important;
     }
@@ -796,13 +785,38 @@ footer a:hover {
         border-radius: 6px;
     }
 
+    /* Challenge Mode Mobile Stacking Overrides */
+    #endgame-section {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    #finished-buttons {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+        align-items: center !important;
+    }
+
+    #finished-buttons .nav-btn, 
+    .challenge-container .nav-btn,
+    #start-btn {
+        width: 100% !important;
+        max-width: 340px !important;
+        text-align: center !important;
+        padding: 14px 20px !important;
+        font-size: 1.2rem !important;
+        box-sizing: border-box;
+    }
+
     .challenge-container {
         max-width: 100%;
         padding: 0 10px;
         box-sizing: border-box;
     }
     .challenge-container #status-msg, #status-msg {
-        font-size: 1.3rem;
         margin: 0;
         min-height: 24px;
     }

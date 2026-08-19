@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=60">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=64">
 </head>
 
 <body>
@@ -14,6 +14,7 @@
     </header>
 
     <div id="mobile-layout-wrapper" class="challenge-container" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: auto; padding: 0 5px; box-sizing: border-box; width: 100%;">
+        
         <section class="challenge-input-box">
             <label for="secret-input">Enter a 5-Letter Word:</label>
 
@@ -37,11 +38,16 @@
         </div>
 
         <div id="status-msg"></div>
-        <div id="you-tried-msg" style="display: none; text-align: center; margin-top: 15px; margin-bottom: 15px; font-size: 1.8rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);">You Tried</div>
+
+        <div id="you-tried-msg" style="display: none; text-align: center; margin-top: 15px; margin-bottom: 15px; font-size: 1.8rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);">
+            You Tried
+        </div>
 
         <div id="endgame-section" style="display: none;">
-            <button id="reveal-btn" type="button" class="nav-btn">Another Round</button>
-            <a href="/" class="nav-btn">Back to Wordle</a>
+            <div id="finished-buttons">
+                <button id="reveal-btn" type="button" class="nav-btn">Another Round</button>
+                <a href="/" class="nav-btn">Back to Wordle</a>
+            </div>
         </div>
     </div>
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=62">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=63">
 </head>
 
 <body>
@@ -130,11 +130,10 @@
         let aiWonFirst = false;
         let modalClosed = false;
         let isProcessing = false;
-        let showingComputerCard = false; // Tracks mobile card flipping state
+        let showingComputerCard = false;
 
-        // Card flipping handler for mobile viewports
         function flipCard() {
-            if (!gameState.aiRevealed) return; // Only allowed after AI is fully revealed
+            if (!gameState.aiRevealed) return;
             showingComputerCard = !showingComputerCard;
             
             const playerGrid = document.getElementById("player-grid");
@@ -264,14 +263,25 @@
             modal.style.display = "flex";
         }
 
-        // STATS MODAL CLOSE HANDLER (Triggers mobile reveal sequence instantly upon clicking X)
-        document.getElementById("close-stats-btn").addEventListener("click", () => {
+        // STATS MODAL CLOSE HANDLER (Triggers reveal + forces mobile view to switch to computer board)
+        document.getElementById("close-stats-btn").addEventListener("click", async () => {
             document.getElementById("stats-modal").style.display = "none";
             modalClosed = true;
 
-            // Automatically start reveal sequence for mobile viewports right after closing stats
             if (window.innerWidth < 800 && !gameState.aiRevealed) {
-                triggerAiReveal();
+                await triggerAiReveal();
+                
+                // Automatically flip view to the computer card on mobile after reveal finishes
+                showingComputerCard = true;
+                const playerGrid = document.getElementById("player-grid");
+                const aiGridMobile = document.getElementById("ai-grid-mobile");
+                const boardTitle = document.getElementById("board-title");
+                const keyboardContainer = document.getElementById("keyboard-container");
+
+                if (playerGrid) playerGrid.style.display = "none";
+                if (aiGridMobile) aiGridMobile.style.display = "grid";
+                if (boardTitle) boardTitle.textContent = "Computer";
+                if (keyboardContainer) keyboardContainer.style.display = "none";
             }
 
             endgameSection.style.setProperty("display", "flex", "important");
@@ -411,6 +421,7 @@
             document.getElementById("ai-grid-mobile").classList.remove("masked-letters");
             
             gameState.aiRevealed = true;
+            document.body.classList.add("ai-revealed-mobile"); // Exposes flip buttons
             saveState();
             
             setTimeout(() => {
@@ -526,7 +537,8 @@
         async function submitGuess() {
             if (currentGuess.length !== COLS) {
                 statusMsg.textContent = "The Word Must be 5 Letters.";
-                statusMsg.classList.remove("small-warning", "loading-prompt");
+                statusMsg.classList.remove("small-warning");
+                statusMsg.className = "loading-prompt"; // Unified font styling
                 shakeRow(currentRow);
                 return;
             }
@@ -546,7 +558,7 @@
 
                 if (response.status === 400) {
                     statusMsg.textContent = data.error || "Not in The Word List";
-                    statusMsg.className = "";
+                    statusMsg.className = "loading-prompt"; // Unified font styling
                     shakeRow(currentRow);
                     isProcessing = false;
                     return;
@@ -555,7 +567,7 @@
                 if (!response.ok) {
                     isUserGameOver = true;
                     statusMsg.textContent = data.error || "Turn error";
-                    statusMsg.className = "";
+                    statusMsg.className = "loading-prompt"; // Unified font styling
                     gameState.gameOver = true;
                     gameState.targetWord = data.target || "UNKNOWN";
                     gameState.statusText = statusMsg.textContent;
@@ -631,18 +643,20 @@
                         saveGlobalStats();
                     }
 
-                    // AUTO-REVEAL AI SCRIPT TRIGGER ON WIN
                     await triggerAiReveal();
 
                     await new Promise(res => setTimeout(res, 1000));
                     if (aiWonOnSameTurn) {
                         statusMsg.textContent = "You Won!"; 
+                        statusMsg.className = "loading-prompt"; // Unified font styling
                         gameState.statusText = "You Won!";
                     } else if (aiWonFirst) {
                         statusMsg.textContent = "You Lost!"; 
+                        statusMsg.className = "loading-prompt"; // Unified font styling
                         gameState.statusText = "You Lost!";
                     } else {
                         statusMsg.textContent = "Congrats, You Won!"; 
+                        statusMsg.className = "loading-prompt"; // Unified font styling
                         gameState.statusText = "Congrats, You Won!";
                     }
                     saveState();
@@ -676,6 +690,7 @@
 
                     await new Promise(res => setTimeout(res, 1000));
                     statusMsg.textContent = "Better Luck Next Time!";
+                    statusMsg.className = "loading-prompt"; // Unified font styling
                     gameState.statusText = "Better Luck Next Time!";
                     saveState();
 
@@ -689,7 +704,7 @@
 
                 if (aiWonFirst && !gameState.playOutMsgShown) {
                     statusMsg.textContent = "You Lost, Finish Your Game!";
-                    statusMsg.classList.add("small-warning");
+                    statusMsg.className = "loading-prompt small-warning"; // Unified font styling
                     gameState.statusText = "You Lost, Finish Your Game!";
                     gameState.playOutMsgShown = true; 
                 }
@@ -700,7 +715,7 @@
                 isProcessing = false;
             } catch (err) {
                 statusMsg.textContent = "Failed to Communicate With Server.";
-                statusMsg.className = "";
+                statusMsg.className = "loading-prompt"; // Unified font styling
                 isProcessing = false;
             }
         }
