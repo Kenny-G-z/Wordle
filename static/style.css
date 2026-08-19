@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
-* 
-{
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -29,14 +28,12 @@
         #1e3a8a 82%,
         #0b132b 100%
     );
-
     --button-gradient: linear-gradient(
         135deg,
         #7a00ff 0%,
         #a855f7 50%,
         #38bdf8 100%
     );
-
     --card-glow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(122, 0, 255, 0.22);
     --purple-btn-glow: 0 0 24px rgba(122, 0, 255, 0.65), 0 0 10px rgba(168, 85, 247, 0.4);
     --blue-active-glow: 0 0 16px rgba(0, 247, 255, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.35);
@@ -78,6 +75,7 @@ header h1 {
     -webkit-text-fill-color: transparent;
 }
 
+/* PC Baseline Styles for Subtitle */
 #mobile-subtitle {
     font-family: 'Pacifico', cursive, sans-serif;
     font-size: 2.1rem;
@@ -153,6 +151,7 @@ header h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative; /* Crucial for positioning the absolute flip button */
     transition: border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -164,6 +163,29 @@ header h1 {
         0 0 15px rgba(122, 0, 255, 0.6);
 }
 
+/* Flip symbol button styling */
+.flip-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(168, 85, 247, 0.15);
+    border: 1.5px solid rgba(168, 85, 247, 0.5);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none; /* Hidden by default until revealed */
+    transition: background 0.2s, transform 0.2s;
+    z-index: 5;
+}
+
+.flip-btn:hover {
+    background: rgba(168, 85, 247, 0.35);
+    transform: scale(1.05);
+}
+
+/* Enlarged card titles on PC */
 .board-wrapper h2 {
     font-size: 2.1rem;
     font-weight: 400;
@@ -231,7 +253,8 @@ header h1 {
     color: white;
 }
 
-#ai-grid.masked-letters .tile:not(.revealed), #ai-grid-mobile.masked-letters .tile:not(.revealed) {
+#ai-grid.masked-letters .tile:not(.revealed),
+#ai-grid-mobile.masked-letters .tile:not(.revealed) {
     color: transparent !important;
 }
 
@@ -310,7 +333,6 @@ header h1 {
     align-items: center;
     width: 100%;
     max-width: 600px;
-    padding: 0 15px;
 }
 
 .challenge-input-box {
@@ -330,9 +352,8 @@ header h1 {
 
 .input-row {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 14px;
 }
 
@@ -673,19 +694,17 @@ footer a:hover {
     transition: width 0.5s ease-out;
 }
 
+/* Base Desktop visibility rules */
 @media (min-width: 800px) {
     #keyboard-container {
         display: none !important;
     }
-
     #player-card-wrapper {
         margin-bottom: 0 !important;
     }
-
     #ai-grid-mobile {
         display: none !important;
     }
-
     #status-msg {
         position: static !important;
         order: 3;
@@ -707,6 +726,7 @@ footer a:hover {
     }
 }
 
+/* Mobile Viewport Optimizations */
 @media (max-width: 650px) {
     body {
         padding: 5px 4px;
@@ -714,11 +734,9 @@ footer a:hover {
         height: auto;
         overflow-y: auto;
     }
-
     header {
         margin-bottom: 5px;
     }
-
     header h1 {
         font-size: 2.2rem;
     }
@@ -743,26 +761,32 @@ footer a:hover {
         padding: 15px 12px;
         border-radius: 12px;
         width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
+        max-width: 360px;
     }
     
+    /* ENLARGED MOBILE FONT SIZES FOR TITLES & LOADING PROMPTS */
     .board-wrapper h2 {
-        font-size: 1.65rem; 
-        margin-bottom: 12px;
+        font-size: 2.1rem !important; 
+        margin-bottom: 8px;
+    }
+    
+    #status-msg.loading-prompt {
+        font-size: 1.95rem !important;
+    }
+
+    /* SHOW THE FLIP BUTTON ONLY WHEN REVEALED ON MOBILE */
+    body.ai-revealed-mobile .flip-btn {
+        display: block !important;
     }
     
     #player-grid, #ai-grid-mobile, #challenge-grid {
         width: 100%;
-        box-sizing: border-box;
     }
-
     .row {
         width: 100%;
         grid-template-columns: repeat(5, 1fr);
         grid-gap: 5px;
     }
-
     .tile {
         width: 100%;
         height: auto;
@@ -772,88 +796,23 @@ footer a:hover {
         border-radius: 6px;
     }
 
-    .challenge-input-box {
-        width: 100%;
-    }
-
-    .input-row {
-        width: 100%;
-        flex-direction: column;
-    }
-
-    #secret-input {
-        width: 100% !important;
-        max-width: 340px !important;
-        box-sizing: border-box;
-        height: 50px;
-        font-size: 1.6rem;
-    }
-    
-    #endgame-section, #finished-buttons {
-        flex-direction: column !important;
-        gap: 10px !important;
-        width: 100%;
-        align-items: center;
-    }
-
-    .nav-btn, #start-btn, #reveal-btn, #another-btn {
-        width: 100%;
-        max-width: 340px;
-        text-align: center;
-        padding: 14px 20px !important;
-        font-size: 1.2rem !important;
-    }
-
-    .challenge-container .board-wrapper {
-        margin-top: 10px !important;
-        margin-bottom: 5px !important;
-    }
-    
-    #keyboard-container {
-        gap: 5px !important;
-        margin-top: 5px !important;
-        margin-bottom: 5px !important;
-        width: 100% !important;
-        max-width: 400px !important;
-    }
-
-    .key-btn {
-        padding: 0 !important;
-        font-size: 0.85rem !important;
-        height: 48px !important;
-        max-width: none !important;
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .special-key {
-        max-width: 60px !important;
-        font-size: 0.7rem !important;
-    }
-
     .challenge-container {
         max-width: 100%;
         padding: 0 10px;
         box-sizing: border-box;
     }
-
     .challenge-container #status-msg, #status-msg {
         font-size: 1.3rem;
         margin: 0;
         min-height: 24px;
     }
-
     .footer-line {
         margin-top: 45px !important; 
     }
-
     footer {
         margin-top: 10px !important;
         font-size: 16px;
     }
-
     footer a {
         font-size: 16px;
     }

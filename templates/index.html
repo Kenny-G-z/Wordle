@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=61">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=62">
 </head>
 
 <body>
@@ -26,6 +26,7 @@
         <div id="game-container" style="display: flex; justify-content: center; width: 100%; flex-wrap: wrap;">
             
             <section id="player-card-wrapper" class="board-wrapper">
+                <button type="button" class="flip-btn" onclick="flipCard()" title="Switch View">🔄</button>
                 <h2 id="board-title">Player</h2>
                 <div id="player-grid"></div>
                 <div id="ai-grid-mobile" class="masked-letters" style="display: none;"></div>
@@ -69,6 +70,7 @@
             </div>
 
             <section id="ai-card-wrapper" class="board-wrapper desktop-only">
+                <button type="button" class="flip-btn" onclick="flipCard()" title="Switch View">🔄</button>
                 <h2>Computer</h2>
                 <div id="ai-grid" class="masked-letters"></div>
             </section>
@@ -128,6 +130,30 @@
         let aiWonFirst = false;
         let modalClosed = false;
         let isProcessing = false;
+        let showingComputerCard = false; // Tracks mobile card flipping state
+
+        // Card flipping handler for mobile viewports
+        function flipCard() {
+            if (!gameState.aiRevealed) return; // Only allowed after AI is fully revealed
+            showingComputerCard = !showingComputerCard;
+            
+            const playerGrid = document.getElementById("player-grid");
+            const aiGridMobile = document.getElementById("ai-grid-mobile");
+            const boardTitle = document.getElementById("board-title");
+            const keyboardContainer = document.getElementById("keyboard-container");
+
+            if (showingComputerCard) {
+                playerGrid.style.display = "none";
+                aiGridMobile.style.display = "grid";
+                boardTitle.textContent = "Computer";
+                if(keyboardContainer) keyboardContainer.style.display = "none";
+            } else {
+                playerGrid.style.display = "grid";
+                aiGridMobile.style.display = "none";
+                boardTitle.textContent = "Player";
+                if(!gameState.gameOver && keyboardContainer) keyboardContainer.style.display = "flex";
+            }
+        }
 
         let gameState = {
             date: new Date().toISOString().split("T")[0],
@@ -238,15 +264,14 @@
             modal.style.display = "flex";
         }
 
+        // STATS MODAL CLOSE HANDLER (Triggers mobile reveal sequence instantly upon clicking X)
         document.getElementById("close-stats-btn").addEventListener("click", () => {
             document.getElementById("stats-modal").style.display = "none";
             modalClosed = true;
 
-            if (window.innerWidth < 800) {
-                document.getElementById("keyboard-container").style.display = "none";
-                document.getElementById("player-grid").style.display = "none";
-                document.getElementById("ai-grid-mobile").style.display = "grid";
-                document.getElementById("board-title").textContent = "Computer";
+            // Automatically start reveal sequence for mobile viewports right after closing stats
+            if (window.innerWidth < 800 && !gameState.aiRevealed) {
+                triggerAiReveal();
             }
 
             endgameSection.style.setProperty("display", "flex", "important");
@@ -605,6 +630,9 @@
                         gameState.statsSaved = true;
                         saveGlobalStats();
                     }
+
+                    // AUTO-REVEAL AI SCRIPT TRIGGER ON WIN
+                    await triggerAiReveal();
 
                     await new Promise(res => setTimeout(res, 1000));
                     if (aiWonOnSameTurn) {
