@@ -33,7 +33,6 @@ def get_feedback_code(guess, secret):
             pattern[i] = 2
         else:
             remaining[secret[i]] += 1
-
     for i in range(5):
         if pattern[i] == 2:
             continue
@@ -195,11 +194,12 @@ class ChallengeBotState:
 
 def get_daily_word():
     try:
-        today = datetime.date.today().isoformat()
+        from zoneinfo import ZoneInfo
+        ny_tz = ZoneInfo("America/New_York")
+        today = datetime.datetime.now(ny_tz).date().isoformat()
         url = f"https://www.nytimes.com/svc/wordle/v2/{today}.json"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
-        
         return response.json()["solution"].lower()
     except Exception:
         return "The Wordle Failed to Load"

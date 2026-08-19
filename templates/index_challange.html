@@ -36,48 +36,15 @@
             </section>
         </main>
 
-        <div id="keyboard-container" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 20px auto; max-width: 500px; padding: 0 10px;">
-            <div class="keyboard-row" style="display: flex; gap: 6px;">
-                <button class="key-btn" data-key="q">Q</button>
-                <button class="key-btn" data-key="w">W</button>
-                <button class="key-btn" data-key="e">E</button>
-                <button class="key-btn" data-key="r">R</button>
-                <button class="key-btn" data-key="t">T</button>
-                <button class="key-btn" data-key="y">Y</button>
-                <button class="key-btn" data-key="u">U</button>
-                <button class="key-btn" data-key="i">I</button>
-                <button class="key-btn" data-key="o">O</button>
-                <button class="key-btn" data-key="p">P</button>
-            </div>
-            <div class="keyboard-row" style="display: flex; gap: 6px;">
-                <button class="key-btn" data-key="a">A</button>
-                <button class="key-btn" data-key="s">S</button>
-                <button class="key-btn" data-key="d">D</button>
-                <button class="key-btn" data-key="f">F</button>
-                <button class="key-btn" data-key="g">G</button>
-                <button class="key-btn" data-key="h">H</button>
-                <button class="key-btn" data-key="j">J</button>
-                <button class="key-btn" data-key="k">K</button>
-                <button class="key-btn" data-key="l">L</button>
-            </div>
-            <div class="keyboard-row" style="display: flex; gap: 6px;">
-                <button class="key-btn special-key" data-key="Enter" style="padding: 10px 12px; font-size: 0.8rem;">ENTER</button>
-                <button class="key-btn" data-key="z">Z</button>
-                <button class="key-btn" data-key="x">X</button>
-                <button class="key-btn" data-key="c">C</button>
-                <button class="key-btn" data-key="v">V</button>
-                <button class="key-btn" data-key="b">B</button>
-                <button class="key-btn" data-key="n">N</button>
-                <button class="key-btn" data-key="m">M</button>
-                <button class="key-btn special-key" data-key="Backspace" style="padding: 10px 10px; font-size: 0.8rem;">⌫</button>
-            </div>
-        </div>
-
         <div id="status-msg"></div>
 
         <div id="endgame-section" style="display: none;">
             <button id="reveal-btn" type="button" class="nav-btn">Another Round</button>
             <a href="/" class="nav-btn">Back to Wordle</a>
+        </div>
+        
+        <div id="you-tried-msg" style="display: none; text-align: center; margin-top: 25px; font-size: 1.8rem; color: var(--footer-text-color); text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);">
+            You Tried
         </div>
     </div>
 
@@ -105,31 +72,58 @@
         const startBtn = document.getElementById("start-btn");
         const anotherBtn = document.getElementById("reveal-btn");
         const finishedSection = document.getElementById("endgame-section");
+        const youTriedMsg = document.getElementById("you-tried-msg");
+        
         let secret = "";
         let gameOver = false;
-        let globalStats = {challengePlayed: 0, challengeWon: 0};
-        function loadGlobalStats() {const saved = localStorage.getItem("wordle_global_stats"); if (saved) {const parsed = JSON.parse(saved); globalStats = { ...globalStats, ...parsed }}}
-        function saveGlobalStats() {localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));}
+        let globalStats = { challengePlayed: 0, challengeWon: 0 };
+
+        function loadGlobalStats() {
+            const saved = localStorage.getItem("wordle_global_stats"); 
+            if (saved) {
+                const parsed = JSON.parse(saved); 
+                globalStats = { ...globalStats, ...parsed };
+            }
+        }
+        
+        function saveGlobalStats() {
+            localStorage.setItem("wordle_global_stats", JSON.stringify(globalStats));
+        }
+        
         loadGlobalStats();
 
         function renderChallengeStatsModal(didUserWin) {
             const modal = document.getElementById("challenge-stats-modal");
             const titleEl = document.getElementById("challenge-modal-title");
+            
             titleEl.classList.remove("visible");
             titleEl.style.color = "var(--footer-text-color)";
             titleEl.style.textShadow = "0 0 15px rgba(168, 85, 247, 0.4)";
-            if (didUserWin) {titleEl.textContent = "You Finally Got One";} 
-            else {titleEl.textContent = "Satisfied?";}
+            
+            if (didUserWin) {
+                titleEl.textContent = "You Finally Got One";
+            } else {
+                titleEl.textContent = "Satisfied?";
+            }
+            
             document.getElementById("stat-chal-played").textContent = globalStats.challengePlayed || 0;
             document.getElementById("stat-chal-won").textContent = globalStats.challengeWon || 0;
+            
             const played = globalStats.challengePlayed || 0;
             const won = globalStats.challengeWon || 0;
             const pct = played > 0 ? Math.round((won / played) * 100) : 0;
+            
             document.getElementById("stat-chal-win-pct").textContent = pct;
+            
             modal.style.display = "flex";
-            setTimeout(() => {titleEl.classList.add("visible");}, 1000);
+            setTimeout(() => { titleEl.classList.add("visible"); }, 1000);
         }
-        document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {document.getElementById("challenge-stats-modal").style.display = "none";});
+
+        // Close modal and reveal the "You Tried" text
+        document.getElementById("close-challenge-stats-btn").addEventListener("click", () => {
+            document.getElementById("challenge-stats-modal").style.display = "none";
+            youTriedMsg.style.display = "block";
+        });
 
         for (let r = 0; r < ROWS; r++) {
             const row = document.createElement("div");
@@ -149,51 +143,48 @@
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     const tile = document.getElementById(`challenge-tile-${r}-${c}`);
-                    if (tile) {tile.textContent = ""; tile.removeAttribute("data-state"); tile.className = "tile";}
+                    if (tile) {
+                        tile.textContent = ""; 
+                        tile.removeAttribute("data-state"); 
+                        tile.className = "tile";
+                    }
                 }
             }
         }
 
         startBtn.addEventListener("click", startGame);
         
-        document.querySelectorAll(".key-btn").forEach(button => {
-            button.addEventListener("click", () => {
-                if (secretInput.disabled) return;
-                const keyValue = button.getAttribute("data-key");
-
-                if (keyValue === "Enter") {
-                    startGame();
-                } else if (keyValue === "Backspace") {
-                    if (secretInput.value.length > 0) {
-                        secretInput.value = secretInput.value.slice(0, -1);
-                    }
-                } else if (/^[a-zA-Z]$/.test(keyValue)) {
-                    if (secretInput.value.length < COLS) {
-                        secretInput.value += keyValue.toUpperCase();
-                    }
-                }
-            });
+        secretInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                startGame();
+            }
         });
-
-        secretInput.addEventListener("keydown", (e) => {if (e.key === "Enter") {startGame();}});
         
         async function startGame() {
             secret = secretInput.value.trim().toLowerCase();
-            if (secret.length !== 5) {statusMsg.textContent = "The Word Must be 5 Letters.";return;}
+            
+            if (secret.length !== 5) {
+                statusMsg.textContent = "The Word Must be 5 Letters.";
+                return;
+            }
+            
             resetGrid();
             statusMsg.textContent = "Computer is Loading Turn 1...";
             gameOver = false;
             secretInput.disabled = true;
             startBtn.style.display = "none";
             finishedSection.style.display = "none";
+            youTriedMsg.style.display = "none"; // Hide message on new game
+            
             try {
                 let res = await fetch("/start_challenge", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ secret: secret })
-                })
+                });
 
                 let data = await res.json();
+                
                 if (!res.ok) {
                     statusMsg.textContent = data.error || "Failed to initialize The Computer.";
                     secretInput.disabled = false;
@@ -211,9 +202,12 @@
                     saveGlobalStats();
                     statusMsg.textContent = "";
                     await new Promise(r => setTimeout(r, 1000));
-                    statusMsg.textContent = "The Computer Solved It!";
+                    statusMsg.textContent = "Computer Solved It!";
                     
-                    setTimeout(() => {showFinished(); renderChallengeStatsModal(false);}, 1000);
+                    setTimeout(() => {
+                        showFinished(); 
+                        renderChallengeStatsModal(false);
+                    }, 1000);
                     return;
                 }
 
@@ -228,9 +222,14 @@
                     });
 
                     data = await res.json();
+                    
                     if (data.ended || !res.ok) break;
                     await renderRow(currentRound, data.guess, data.feedback);
-                    if (data.solved) {gameOver = true; break;}
+                    
+                    if (data.solved) {
+                        gameOver = true; 
+                        break;
+                    }
                 }
 
                 statusMsg.textContent = "";
@@ -238,8 +237,10 @@
 
                 let userWon = false;
 
-                if (data.solved) {globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; statusMsg.textContent = "Computer Solved It!";} 
-                else if (currentRound >= 5) {
+                if (data.solved) {
+                    globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1; 
+                    statusMsg.textContent = "Computer Solved It!";
+                } else if (currentRound >= 5) {
                     userWon = true;
                     globalStats.challengePlayed = (globalStats.challengePlayed || 0) + 1;
                     globalStats.challengeWon = (globalStats.challengeWon || 0) + 1;
@@ -247,7 +248,11 @@
                 }
 
                 saveGlobalStats();
-                setTimeout(() => {showFinished(); renderChallengeStatsModal(userWon);}, 1000);
+                
+                setTimeout(() => {
+                    showFinished(); 
+                    renderChallengeStatsModal(userWon);
+                }, 1000);
             
             } catch (err) {
                 console.error(err);
@@ -259,6 +264,7 @@
 
         async function renderRow(rowIdx, guessWord, feedbackArray) {
             const word = guessWord.toUpperCase();
+            
             for (let c = 0; c < COLS; c++) {
                 const tile = document.getElementById(`challenge-tile-${rowIdx}-${c}`);
                 if (!tile) continue;
@@ -266,15 +272,22 @@
                 tile.textContent = word[c];
                 tile.classList.add("dramatic-flip");
 
-                if (feedbackArray[c] === 2) {tile.dataset.state = "correct";} 
-                else if (feedbackArray[c] === 1) {tile.dataset.state = "present";} 
-                else {tile.dataset.state = "absent";}
+                if (feedbackArray[c] === 2) {
+                    tile.dataset.state = "correct";
+                } else if (feedbackArray[c] === 1) {
+                    tile.dataset.state = "present";
+                } else {
+                    tile.dataset.state = "absent";
+                }
+                
                 await new Promise(resolve => setTimeout(resolve, 180));
             }
             await new Promise(resolve => setTimeout(resolve, 400));
         }
 
-        function showFinished() {finishedSection.style.setProperty("display", "flex", "important");}
+        function showFinished() {
+            finishedSection.style.setProperty("display", "flex", "important");
+        }
 
         anotherBtn.addEventListener("click", () => {
             secretInput.value = "";
@@ -282,6 +295,7 @@
             startBtn.style.display = "inline-block";
             statusMsg.textContent = "";
             finishedSection.style.display = "none";
+            youTriedMsg.style.display = "none";
             gameOver = false;
             resetGrid();
             secretInput.focus();
