@@ -12,11 +12,11 @@
 
     <header>
         <h1>Welcome to Wordle</h1>
-        <h3 id="mobile-subtitle">You are Playing Against a Computer</h3>
+        <h3 id="mobile-subtitle">You are Playing a Computer</h3>
     </header>
 
     {% if load_failed %}
-        <div id="error-banner">The Wordle failed to load.</div>
+        <div id="error-banner">The Wordle failed to load</div>
     {% endif %}
 
     <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: auto; padding: 0 5px; box-sizing: border-box; width: 100%;">
@@ -133,7 +133,6 @@
         let showingComputerCard = sessionStorage.getItem("wordle_showing_computer") === "true";
 
         async function flipCard() {
-            // Allow flipping to computer card if game is over (even if letters aren't fully revealed yet)
             if (!isUserGameOver) return;
             
             const cardWrapper = document.getElementById("player-card-wrapper");
@@ -278,16 +277,13 @@
             modal.style.display = "flex";
         }
 
-        // STATS MODAL CLOSE HANDLER
         document.getElementById("close-stats-btn").addEventListener("click", async () => {
             document.getElementById("stats-modal").style.display = "none";
             modalClosed = true;
 
             if (window.innerWidth < 800) {
-                // Instantly unlock flip button visibility so user can flip to computer card
                 document.body.classList.add("ai-revealed-mobile");
                 
-                // Switch mobile view to the computer card immediately without revealing letters yet
                 showingComputerCard = true;
                 sessionStorage.setItem("wordle_showing_computer", "true");
                 applyCardView();
@@ -713,9 +709,9 @@
                 }
 
                 if (aiWonFirst && !gameState.playOutMsgShown) {
-                    statusMsg.textContent = "You Lost, Finish Your Game!";
+                    statusMsg.textContent = "You Lost, Finish the Rest of Your Game!";
                     statusMsg.className = "loading-prompt small-warning";
-                    gameState.statusText = "You Lost, Finish Your Game!";
+                    gameState.statusText = "You Lost, Finish the Rest of Your Game!";
                     gameState.playOutMsgShown = true; 
                 }
 
@@ -734,6 +730,7 @@
     </script>
 
     <hr class="footer-line">
+
     <footer>
         <p>Created by Kenny</p>
         <a href="https://github.com/Kenny-G-z" target="_blank">View my GitHub</a>
