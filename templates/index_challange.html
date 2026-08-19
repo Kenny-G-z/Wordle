@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=58">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=59">
 </head>
 
 <body>
@@ -13,7 +13,8 @@
         <h1>Challenge The Computer</h1>
     </header>
 
-    <div class="challenge-container">
+    <div id="mobile-layout-wrapper" class="challenge-container" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: auto; padding: 0 5px; box-sizing: border-box; width: 100%;">
+        
         <section class="challenge-input-box">
             <label for="secret-input">Enter a 5-Letter Word:</label>
 
@@ -29,12 +30,12 @@
             </div>
         </section>
 
-        <main id="game-container">
+        <div id="game-container" style="display: flex; justify-content: center; width: 100%; flex-wrap: wrap;">
             <section class="board-wrapper">
                 <h2>Progress</h2>
-                <div id="challenge-grid"></div>
+                <div id="challenge-grid" style="transform-origin: top center;"></div>
             </section>
-        </main>
+        </div>
 
         <div id="status-msg"></div>
 
