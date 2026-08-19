@@ -5,35 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=54">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=55">
 </head>
 
 <body>
 
     <header>
         <h1>Welcome to Wordle</h1>
-        <h3 id="mobile-subtitle">Welcome to Wordle</h3>
-
+        <h3 id="mobile-subtitle">You are Competing Against the Computer</h3>
     </header>
 
     {% if load_failed %}
         <div id="error-banner">The Wordle failed to load.</div>
     {% endif %}
 
-    <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 5px; box-sizing: border-box;">
+    <div id="mobile-layout-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: auto; padding: 0 5px; box-sizing: border-box; width: 100%;">
         
-        <div id="status-msg" style="margin: 2px 0 6px 0; min-height: 28px; text-align: center;"></div>
+        <div id="status-msg"></div>
 
-        <div id="game-container" style="display: flex; gap: 25px; justify-content: center; width: 100%; flex-wrap: wrap;">
+        <div id="game-container" style="display: flex; justify-content: center; width: 100%; flex-wrap: wrap;">
             
             <section id="player-card-wrapper" class="board-wrapper">
                 <h2 id="board-title">Player</h2>
-                <div id="player-grid" style="transform-origin: top center;"></div>
-                <div id="ai-grid-mobile" class="masked-letters" style="transform-origin: top center; display: none;"></div>
+                <div id="player-grid"></div>
+                <div id="ai-grid-mobile" class="masked-letters" style="display: none;"></div>
             </section>
 
-            <div id="keyboard-container" style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 5px 0; max-width: 450px; width: 100%;">
-                <div class="keyboard-row" style="display: flex; gap: 4px; width: 100%; justify-content: center;">
+            <div id="keyboard-container">
+                <div class="keyboard-row">
                     <button class="key-btn" data-key="q">Q</button>
                     <button class="key-btn" data-key="w">W</button>
                     <button class="key-btn" data-key="e">E</button>
@@ -45,7 +44,7 @@
                     <button class="key-btn" data-key="o">O</button>
                     <button class="key-btn" data-key="p">P</button>
                 </div>
-                <div class="keyboard-row" style="display: flex; gap: 4px; width: 100%; justify-content: center;">
+                <div class="keyboard-row">
                     <button class="key-btn" data-key="a">A</button>
                     <button class="key-btn" data-key="s">S</button>
                     <button class="key-btn" data-key="d">D</button>
@@ -56,8 +55,8 @@
                     <button class="key-btn" data-key="k">K</button>
                     <button class="key-btn" data-key="l">L</button>
                 </div>
-                <div class="keyboard-row" style="display: flex; gap: 4px; width: 100%; justify-content: center;">
-                    <button class="key-btn special-key" data-key="Enter" style="padding: 8px 10px; font-size: 0.75rem;">ENTER</button>
+                <div class="keyboard-row">
+                    <button class="key-btn special-key" data-key="Enter">ENTER</button>
                     <button class="key-btn" data-key="z">Z</button>
                     <button class="key-btn" data-key="x">X</button>
                     <button class="key-btn" data-key="c">C</button>
@@ -65,18 +64,18 @@
                     <button class="key-btn" data-key="b">B</button>
                     <button class="key-btn" data-key="n">N</button>
                     <button class="key-btn" data-key="m">M</button>
-                    <button class="key-btn special-key" data-key="Backspace" style="padding: 8px 8px; font-size: 0.75rem;">⌫</button>
+                    <button class="key-btn special-key" data-key="Backspace">⌫</button>
                 </div>
             </div>
 
             <section id="ai-card-wrapper" class="board-wrapper desktop-only">
                 <h2>Computer</h2>
-                <div id="ai-grid" class="masked-letters" style="transform-origin: top center;"></div>
+                <div id="ai-grid" class="masked-letters"></div>
             </section>
         </div>
     </div>
 
-    <div id="endgame-section" style="display: none; justify-content: center; margin-top: 15px;">
+    <div id="endgame-section" style="display: none; justify-content: center; margin-top: 10px;">
         <button id="reveal-btn" type="button" class="nav-btn">Reveal Letters</button>
         <div id="challenge-link-container" style="display: none;">
             <a href="/challenge" class="nav-btn">Challenge the Computer?</a>
@@ -117,25 +116,6 @@
             </div>
         </div>
     </div>
-
-    <style>
-        @media (min-width: 800px) {
-            #keyboard-container { display: none !important; }
-            #player-card-wrapper { margin-bottom: 0 !important; }
-            #ai-grid-mobile { display: none !important; }
-            
-            #status-msg { 
-                position: static !important; 
-                order: 3; 
-                margin-top: 30px !important; 
-                font-size: 2rem !important; 
-            }
-        }
-        @media (max-width: 799px) {
-            .desktop-only { display: none !important; }
-            #player-grid, #ai-grid-mobile { transform: scale(0.85); }
-        }
-    </style>
 
     <script>
         const ROWS = 6;
@@ -280,7 +260,6 @@
         const endgameSection = document.getElementById("endgame-section");
         const revealBtn = document.getElementById("reveal-btn");
         const challengeContainer = document.getElementById("challenge-link-container");
-        const aiGrid = document.getElementById("ai-grid");
         const statusMsg = document.getElementById("status-msg");
 
         function createGrid(containerId) {
