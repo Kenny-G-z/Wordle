@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=57">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=61">
 </head>
 
 <body>
 
     <header>
         <h1>Welcome to Wordle</h1>
-        <h3 id="mobile-subtitle">You are Playing a Computer</h3>
+        <h3 id="mobile-subtitle">You are Playing Against a Computer</h3>
     </header>
 
     {% if load_failed %}
@@ -127,7 +127,7 @@
         let isRevealing = false;
         let aiWonFirst = false;
         let modalClosed = false;
-        let isProcessing = false; // Prevents enter button spamming
+        let isProcessing = false;
 
         let gameState = {
             date: new Date().toISOString().split("T")[0],
@@ -287,13 +287,10 @@
         createGrid("ai-grid-mobile");
 
         function saveState() {
-            return; // ◄ TEMPORARILY DISABLED: WONT SAVE ON REFRESH
             localStorage.setItem("wordle_race_daily_state", JSON.stringify(gameState));
         }
         
         function restoreState() {
-            return; // ◄ TEMPORARILY DISABLED: WONT LOAD ON REFRESH
-
             const saved = localStorage.getItem("wordle_race_daily_state");
             const today = new Date().toISOString().split("T")[0];
 
@@ -401,7 +398,7 @@
 
         document.querySelectorAll(".key-btn").forEach(button => {
             button.addEventListener("click", () => {
-                if (isUserGameOver || isProcessing) return; // Block spam clicks
+                if (isUserGameOver || isProcessing) return;
                 const keyValue = button.getAttribute("data-key");
 
                 if (keyValue === "Enter") {
@@ -421,7 +418,7 @@
         });
 
         window.addEventListener("keydown", (e) => {
-            if (isUserGameOver || isProcessing) return; // Block spam presses
+            if (isUserGameOver || isProcessing) return;
             if (statusMsg.textContent.includes("Play Out Your game") && (e.key === "Backspace" || /^[a-zA-Z]$/.test(e.key))) {
                 statusMsg.textContent = "";
                 statusMsg.classList.remove("small-warning");
@@ -509,7 +506,7 @@
                 return;
             }
 
-            isProcessing = true; // Lock inputs
+            isProcessing = true;
             statusMsg.textContent = "Loading...";
             statusMsg.className = "loading-prompt";
 
@@ -672,7 +669,7 @@
                 currentRow++;
                 currentGuess = "";
                 saveState();
-                isProcessing = false; // Unlock inputs for next turn
+                isProcessing = false;
             } catch (err) {
                 statusMsg.textContent = "Failed to Communicate With Server.";
                 statusMsg.className = "";

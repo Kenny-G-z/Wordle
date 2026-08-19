@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
-* {
+* 
+{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -28,12 +29,14 @@
         #1e3a8a 82%,
         #0b132b 100%
     );
+
     --button-gradient: linear-gradient(
         135deg,
         #7a00ff 0%,
         #a855f7 50%,
         #38bdf8 100%
     );
+
     --card-glow: 0 15px 35px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(122, 0, 255, 0.22);
     --purple-btn-glow: 0 0 24px rgba(122, 0, 255, 0.65), 0 0 10px rgba(168, 85, 247, 0.4);
     --blue-active-glow: 0 0 16px rgba(0, 247, 255, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.35);
@@ -228,8 +231,7 @@ header h1 {
     color: white;
 }
 
-#ai-grid.masked-letters .tile:not(.revealed),
-#ai-grid-mobile.masked-letters .tile:not(.revealed) {
+#ai-grid.masked-letters .tile:not(.revealed), #ai-grid-mobile.masked-letters .tile:not(.revealed) {
     color: transparent !important;
 }
 
@@ -671,17 +673,19 @@ footer a:hover {
     transition: width 0.5s ease-out;
 }
 
-/* Base Desktop visibility rules */
 @media (min-width: 800px) {
     #keyboard-container {
         display: none !important;
     }
+
     #player-card-wrapper {
         margin-bottom: 0 !important;
     }
+
     #ai-grid-mobile {
         display: none !important;
     }
+
     #status-msg {
         position: static !important;
         order: 3;
@@ -703,7 +707,6 @@ footer a:hover {
     }
 }
 
-/* Mobile Viewport Optimizations */
 @media (max-width: 650px) {
     body {
         padding: 5px 4px;
@@ -711,9 +714,11 @@ footer a:hover {
         height: auto;
         overflow-y: auto;
     }
+
     header {
         margin-bottom: 5px;
     }
+
     header h1 {
         font-size: 2.2rem;
     }
@@ -734,7 +739,6 @@ footer a:hover {
         padding-top: 5px;
     }
 
-    /* CARD STRETCHES FLUSH ACROSS SCREEN BOUNDARIES */
     .board-wrapper {
         padding: 15px 12px;
         border-radius: 12px;
@@ -748,16 +752,17 @@ footer a:hover {
         margin-bottom: 12px;
     }
     
-    /* GRID FILL CARDS COMPLETELY */
     #player-grid, #ai-grid-mobile, #challenge-grid {
         width: 100%;
         box-sizing: border-box;
     }
+
     .row {
         width: 100%;
         grid-template-columns: repeat(5, 1fr);
         grid-gap: 5px;
     }
+
     .tile {
         width: 100%;
         height: auto;
@@ -770,10 +775,12 @@ footer a:hover {
     .challenge-input-box {
         width: 100%;
     }
+
     .input-row {
         width: 100%;
         flex-direction: column;
     }
+
     #secret-input {
         width: 100% !important;
         max-width: 340px !important;
@@ -782,13 +789,13 @@ footer a:hover {
         font-size: 1.6rem;
     }
     
-    /* BUTTON STACKING ON MOBILE */
     #endgame-section, #finished-buttons {
         flex-direction: column !important;
         gap: 10px !important;
         width: 100%;
         align-items: center;
     }
+
     .nav-btn, #start-btn, #reveal-btn, #another-btn {
         width: 100%;
         max-width: 340px;
@@ -809,6 +816,7 @@ footer a:hover {
         width: 100% !important;
         max-width: 400px !important;
     }
+
     .key-btn {
         padding: 0 !important;
         font-size: 0.85rem !important;
@@ -819,27 +827,33 @@ footer a:hover {
         justify-content: center;
         align-items: center;
     }
+
     .special-key {
         max-width: 60px !important;
         font-size: 0.7rem !important;
     }
+
     .challenge-container {
         max-width: 100%;
         padding: 0 10px;
         box-sizing: border-box;
     }
+
     .challenge-container #status-msg, #status-msg {
         font-size: 1.3rem;
         margin: 0;
         min-height: 24px;
     }
+
     .footer-line {
         margin-top: 45px !important; 
     }
+
     footer {
         margin-top: 10px !important;
         font-size: 16px;
     }
+
     footer a {
         font-size: 16px;
     }
